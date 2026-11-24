@@ -4,12 +4,12 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Somente o Barbeiro responsável pode cancelar seu Agendamento futuro.
-- [ ] Agendamentos passados ou de outro Barbeiro não podem ser cancelados por essa operação.
-- [ ] O cancelamento preserva o Agendamento e registra seu estado; não apaga o histórico.
-- [ ] O horário cancelado deixa de bloquear outro Agendamento dentro do mesmo Bloco de horário.
-- [ ] Cliente e Barbeiro veem o estado cancelado em seus históricos.
-- [ ] Não é enviada notificação por e-mail ou serviço externo.
-- [ ] Permissões, conflito de horário e persistência são cobertos por testes de caso de uso, contrato e rota.
+- [x] Somente o Barbeiro responsável pode cancelar seu Agendamento futuro.
+- [x] Agendamentos passados ou de outro Barbeiro não podem ser cancelados por essa operação.
+- [x] O cancelamento preserva o Agendamento e registra seu estado; não apaga o histórico.
+- [x] O horário cancelado deixa de bloquear outro Agendamento dentro do mesmo Bloco de horário.
+- [x] Cliente e Barbeiro veem o estado cancelado em seus históricos.
+- [x] Não é enviada notificação por e-mail ou serviço externo.
+- [x] Permissões, conflito de horário e persistência são cobertos por testes de caso de uso, contrato e rota.
