@@ -5,7 +5,19 @@
 <hgroup>
   <h2>{{ barbearia.nome }}</h2>
   <p>{{ barbearia.endereco }} · {{ barbearia.bairro }}</p>
+  {% if not barbearia.ativa %}<p><strong>Desativada</strong></p>{% endif %}
 </hgroup>
+<article>
+  <h3>Gerenciar barbearia</h3>
+  {% if barbearia.ativa %}
+  <form method="post" action="{{ url_for('dono.desativar_barbearia', barbearia_id=barbearia.id) }}" class="inline">
+    <button type="submit" class="secondary">Desativar</button>
+  </form>
+  {% endif %}
+  <form method="post" action="{{ url_for('dono.excluir_barbearia', barbearia_id=barbearia.id) }}" class="inline">
+    <button type="submit" class="secondary outline">Excluir definitivamente</button>
+  </form>
+</article>
 {% if barbearia.regras %}<p><strong>Regras da casa:</strong> {{ barbearia.regras }}</p>{% endif %}
 <p><strong>Cadeiras:</strong></p>
 <ul>
@@ -88,6 +100,7 @@
 
 <article>
   <h4>Publicar horário ocioso</h4>
+  {% if barbearia.ativa %}
   <form method="post" action="/dono/barbearias/{{ barbearia.id }}/horarios">
     <div class="grid">
       <label>Cadeira
@@ -101,5 +114,8 @@
     </div>
     <button type="submit">Publicar</button>
   </form>
+  {% else %}
+  <p>Barbearias desativadas não recebem novos horários ociosos.</p>
+  {% endif %}
 </article>
 {% endblock %}

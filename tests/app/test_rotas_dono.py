@@ -168,6 +168,35 @@ def test_exclusao_com_bloco_volta_com_mensagem_na_rota(client):
     assert "Não é possível excluir um horário ocioso com blocos." in pagina
 
 
+def test_dono_desativa_barbearia_com_bloco_pela_rota(client):
+    from tests.app.fluxo import dono_publica_horario
+
+    dono_publica_horario(client)
+    cadastrar_e_entrar(client, "barbeiro")
+    pagina = client.get("/barbeiro/busca?bairro=botafogo").get_data(
+        as_text=True)
+    barbearia_id = extrair(r'name="barbearia_id" value="(\w+)"', pagina)
+    horario_id = extrair(r'name="horario_ocioso_id" value="(\w+)"', pagina)
+    client.post("/barbeiro/blocos",
+                data=dict(barbearia_id=barbearia_id,
+                          horario_ocioso_id=horario_id,
+                          inicio="2030-01-07T14:00",
+                          fim="2030-01-07T16:00"))
+
+    client.post("/logout")
+    cadastrar_e_entrar(client, "dono")
+    pagina = client.post(
+        "/dono/barbearias/{}/desativar".format(barbearia_id),
+        follow_redirects=True).get_data(as_text=True)
+    assert "Desativada" in pagina
+
+    client.post("/logout")
+    cadastrar_e_entrar(client, "barbeiro", email="busca@exemplo.com")
+    busca = client.get("/barbeiro/busca?bairro=botafogo").get_data(
+        as_text=True)
+    assert "Barbearia Exemplo" not in busca
+
+
 def test_regra_violada_volta_com_mensagem(client):
     cadastrar_e_entrar(client, "dono")
     pagina = client.post("/dono/barbearias", data=dict(

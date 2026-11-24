@@ -45,6 +45,9 @@ class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
     def salvar(self, barbearia):
         self._dados[barbearia.id] = deepcopy(barbearia)
 
+    def remover(self, barbearia_id):
+        self._dados.pop(barbearia_id, None)
+
     def por_id(self, barbearia_id):
         return deepcopy(self._dados.get(barbearia_id))
 
@@ -52,7 +55,8 @@ class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
         return self._filtrar(lambda b: b.dono_id == dono_id)
 
     def no_bairro(self, bairro_chave):
-        return self._filtrar(lambda b: b.bairro_chave == bairro_chave)
+        return self._filtrar(
+            lambda b: b.ativa and b.bairro_chave == bairro_chave)
 
     def com_blocos_do_barbeiro(self, barbeiro_id):
         return self._filtrar(lambda b: b.blocos_do_barbeiro(barbeiro_id))

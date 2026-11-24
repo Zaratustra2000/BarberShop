@@ -10,6 +10,9 @@ from use_cases.consultar_barbearias_do_dono import ConsultarBarbeariasDoDono
 from use_cases.editar_perfil_da_barbearia import EditarPerfilDaBarbearia
 from use_cases.editar_horario_ocioso import EditarHorarioOcioso
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
+from use_cases.gerenciar_barbearia import GerenciarBarbearia
+from use_cases.buscar_cadeiras_ociosas import BuscarCadeirasOciosas
+from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
 
 
 def cadastrar_barbearia(ctx, dono, cadeiras=2, nome="Barbearia Exemplo"):
@@ -196,3 +199,68 @@ def test_dono_nao_exclui_horario_ocioso_com_bloco(ctx):
             ctx.usuarios, ctx.barbearias, ctx.relogio).excluir(
                 dono_id=dono.id, barbearia_id=barbearia.id,
                 horario_ocioso_id=horario.id)
+
+
+def test_dono_exclui_barbearia_sem_blocos_de_horario(ctx):
+    dono = ctx.cadastrar("dono")
+    barbearia = cadastrar_barbearia(ctx, dono)
+
+    GerenciarBarbearia(ctx.usuarios, ctx.barbearias).excluir(
+        dono_id=dono.id, barbearia_id=barbearia.id)
+
+    assert ctx.barbearias.por_id(barbearia.id) is None
+
+
+def test_dono_desativa_barbearia_com_bloco_e_preserva_historico(ctx):
+    dono = ctx.cadastrar("dono")
+    barbearia = cadastrar_barbearia(ctx, dono)
+    horario = publicar(ctx, dono, barbearia,
+                       datetime(2030, 1, 7, 13),
+                       datetime(2030, 1, 7, 18))
+    salva = ctx.barbearias.por_id(barbearia.id)
+    bloco = salva.reservar_bloco(
+        horario.id, "barbeiro-1", Periodo(
+            datetime(2030, 1, 7, 14), datetime(2030, 1, 7, 15)))
+    ctx.barbearias.salvar(salva)
+
+    GerenciarBarbearia(ctx.usuarios, ctx.barbearias).desativar(
+        dono_id=dono.id, barbearia_id=barbearia.id)
+
+    desativada = ctx.barbearias.por_id(barbearia.id)
+    assert desativada.ativa is False
+    assert desativada.blocos[0].id == bloco.id
+
+
+def test_barbearia_desativada_sai_da_busca_e_nao_recebe_novos_blocos(ctx):
+    dono = ctx.cadastrar("dono")
+    barbeiro = ctx.cadastrar("barbeiro")
+    barbearia = cadastrar_barbearia(ctx, dono)
+    horario = publicar(ctx, dono, barbearia,
+                       datetime(2030, 1, 7, 13),
+                       datetime(2030, 1, 7, 18))
+    GerenciarBarbearia(ctx.usuarios, ctx.barbearias).desativar(
+        dono_id=dono.id, barbearia_id=barbearia.id)
+
+    ofertas = BuscarCadeirasOciosas(
+        ctx.barbearias, ctx.relogio).executar("Botafogo")
+    assert ofertas == []
+
+    with pytest.raises(DadosInvalidos):
+        ReservarBlocoDeHorario(
+            ctx.usuarios, ctx.barbearias, ctx.relogio).executar(
+                barbeiro_id=barbeiro.id, barbearia_id=barbearia.id,
+                horario_ocioso_id=horario.id,
+                inicio=datetime(2030, 1, 7, 14),
+                fim=datetime(2030, 1, 7, 15))
+
+
+@pytest.mark.parametrize("operacao", ["excluir", "desativar"])
+def test_outro_dono_nao_gerencia_barbearia_alheia(ctx, operacao):
+    dono = ctx.cadastrar("dono", email="dono@exemplo.com")
+    intruso = ctx.cadastrar("dono", email="intruso@exemplo.com")
+    barbearia = cadastrar_barbearia(ctx, dono)
+
+    with pytest.raises(AcessoNegado):
+        getattr(GerenciarBarbearia(
+            ctx.usuarios, ctx.barbearias), operacao)(
+                dono_id=intruso.id, barbearia_id=barbearia.id)

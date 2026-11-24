@@ -55,6 +55,7 @@ class Barbearia:
     longitude: float
     regras: str = ""
     foto_principal: str = ""
+    ativa: bool = True
     cadeiras: List[Cadeira] = field(default_factory=list)
     horarios_ociosos: List[HorarioOcioso] = field(default_factory=list)
     blocos: List[BlocoDeHorario] = field(default_factory=list)
@@ -77,6 +78,9 @@ class Barbearia:
 
     def pertence_a(self, dono_id: str) -> bool:
         return self.dono_id == dono_id
+
+    def desativar(self) -> None:
+        self.ativa = False
 
     def editar(self, nome: str, endereco: str, bairro: str, latitude: float,
                longitude: float, regras: str) -> None:
@@ -117,6 +121,10 @@ class Barbearia:
     def publicar_horario_ocioso(self, cadeira_id: str, periodo: Periodo,
                                 preco_por_hora_centavos: int
                                 ) -> HorarioOcioso:
+        if not self.ativa:
+            raise DadosInvalidos(
+                "Não é possível publicar horários em uma barbearia "
+                "desativada.")
         self.cadeira(cadeira_id)
         if preco_por_hora_centavos <= 0:
             raise DadosInvalidos("O preço por hora precisa ser positivo.")
@@ -184,6 +192,9 @@ class Barbearia:
 
     def reservar_bloco(self, horario_ocioso_id: str, barbeiro_id: str,
                        periodo: Periodo) -> BlocoDeHorario:
+        if not self.ativa:
+            raise DadosInvalidos(
+                "Não é possível reservar blocos em uma barbearia desativada.")
         horario = self.horario_ocioso(horario_ocioso_id)
         if not horario.periodo.contem(periodo):
             raise DadosInvalidos(

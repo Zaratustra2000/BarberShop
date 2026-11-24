@@ -105,3 +105,30 @@ def test_excluir_horario_ocioso_persiste_remocao(repos):
     barbearias.salvar(b)
 
     assert barbearias.por_id(b.id).horarios_ociosos == []
+
+
+def test_desativacao_persiste_e_preserva_blocos(repos):
+    barbearias = repos["barbearias"]
+    b = nova_barbearia()
+    horario = b.horarios_ociosos[0]
+    bloco = b.reservar_bloco(
+        horario.id, "barbeiro-1",
+        Periodo(datetime(2030, 1, 7, 14), datetime(2030, 1, 7, 15)))
+    barbearias.salvar(b)
+
+    b.desativar()
+    barbearias.salvar(b)
+
+    salva = barbearias.por_id(b.id)
+    assert salva.ativa is False
+    assert [b.id for b in salva.blocos] == [bloco.id]
+
+
+def test_remover_barbearia_persiste_nos_dois_adapters(repos):
+    barbearias = repos["barbearias"]
+    b = nova_barbearia()
+    barbearias.salvar(b)
+
+    barbearias.remover(b.id)
+
+    assert barbearias.por_id(b.id) is None

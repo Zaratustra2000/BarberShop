@@ -64,22 +64,38 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
     def __init__(self, banco):
         self._banco = banco
 
+    def remover(self, barbearia_id):
+        with self._banco.conexao() as con:
+            con.execute("DELETE FROM agendamentos WHERE barbearia_id = ?",
+                        (barbearia_id,))
+            con.execute("DELETE FROM blocos WHERE barbearia_id = ?",
+                        (barbearia_id,))
+            con.execute(
+                "DELETE FROM horarios_ociosos WHERE barbearia_id = ?",
+                (barbearia_id,))
+            con.execute("DELETE FROM cadeiras WHERE barbearia_id = ?",
+                        (barbearia_id,))
+            con.execute("DELETE FROM barbearias WHERE id = ?",
+                        (barbearia_id,))
+
     def salvar(self, barbearia):
         with self._banco.conexao() as con:
             con.execute(
                 "INSERT INTO barbearias (id, dono_id, nome, endereco, bairro,"
-                " bairro_chave, latitude, longitude, regras, foto_principal) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                " bairro_chave, latitude, longitude, regras, foto_principal,"
+                " ativa) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 "ON CONFLICT(id) DO UPDATE SET nome = excluded.nome, "
                 "endereco = excluded.endereco, bairro = excluded.bairro, "
                 "bairro_chave = excluded.bairro_chave, "
                 "latitude = excluded.latitude, "
                 "longitude = excluded.longitude, regras = excluded.regras, "
-                "foto_principal = excluded.foto_principal",
+                "foto_principal = excluded.foto_principal, "
+                "ativa = excluded.ativa",
                 (barbearia.id, barbearia.dono_id, barbearia.nome,
                  barbearia.endereco, barbearia.bairro, barbearia.bairro_chave,
                  barbearia.latitude, barbearia.longitude, barbearia.regras,
-                 barbearia.foto_principal))
+                 barbearia.foto_principal, 1 if barbearia.ativa else 0))
             ids_presentes = [c.id for c in barbearia.cadeiras]
             if ids_presentes:
                 placeholders = ",".join("?" for _ in ids_presentes)
@@ -158,7 +174,8 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
         return self._carregar("dono_id = ?", dono_id)
 
     def no_bairro(self, bairro_chave):
-        return self._carregar("bairro_chave = ?", bairro_chave)
+        return self._carregar(
+            "ativa = 1 AND bairro_chave = ?", bairro_chave)
 
     def com_blocos_do_barbeiro(self, barbeiro_id):
         return self._carregar(
@@ -178,7 +195,8 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
             endereco=linha["endereco"], bairro=linha["bairro"],
             latitude=linha["latitude"], longitude=linha["longitude"],
             regras=linha["regras"],
-            foto_principal=linha["foto_principal"])
+            foto_principal=linha["foto_principal"],
+            ativa=bool(linha["ativa"]))
         barbearia.cadeiras = [
             Cadeira(id=c["id"], nome=c["nome"]) for c in con.execute(
                 "SELECT * FROM cadeiras WHERE barbearia_id = ? "

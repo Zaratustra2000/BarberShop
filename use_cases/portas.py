@@ -40,6 +40,10 @@ class RepositorioDeBarbearias(ABC):
         ...
 
     @abstractmethod
+    def remover(self, barbearia_id: str) -> None:
+        ...
+
+    @abstractmethod
     def por_id(self, barbearia_id: str) -> Optional[Barbearia]:
         ...
 

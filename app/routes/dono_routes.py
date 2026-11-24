@@ -105,6 +105,22 @@ def editar_perfil(barbearia_id):
     return redirect(url_for("dono.barbearia", barbearia_id=barbearia.id))
 
 
+@bp.post("/barbearias/<barbearia_id>/desativar")
+@requer_papel("dono")
+def desativar_barbearia(barbearia_id):
+    container().gerenciar_barbearia.desativar(
+        dono_id=usuario_id(), barbearia_id=barbearia_id)
+    return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
+
+
+@bp.post("/barbearias/<barbearia_id>/excluir")
+@requer_papel("dono")
+def excluir_barbearia(barbearia_id):
+    container().gerenciar_barbearia.excluir(
+        dono_id=usuario_id(), barbearia_id=barbearia_id)
+    return redirect(url_for("dono.painel"))
+
+
 @bp.post("/barbearias/<barbearia_id>/foto")
 @requer_papel("dono")
 def atualizar_foto(barbearia_id):

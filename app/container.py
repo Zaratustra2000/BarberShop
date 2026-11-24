@@ -25,6 +25,7 @@ from use_cases.consultar_perfil_da_barbearia import ConsultarPerfilDaBarbearia
 from use_cases.editar_perfil_da_barbearia import (
     EditarPerfilDaBarbearia, SubstituirFotoPrincipalDaBarbearia)
 from use_cases.editar_horario_ocioso import EditarHorarioOcioso
+from use_cases.gerenciar_barbearia import GerenciarBarbearia
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
 from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
 from use_cases.validar_foto_da_barbearia import ValidarFotoDaBarbearia
@@ -52,6 +53,8 @@ class Container:
         self.consultar_barbearias_do_dono = ConsultarBarbeariasDoDono(
             barbearias)
         self.editar_perfil_da_barbearia = EditarPerfilDaBarbearia(
+            usuarios, barbearias)
+        self.gerenciar_barbearia = GerenciarBarbearia(
             usuarios, barbearias)
         self.substituir_foto_principal = SubstituirFotoPrincipalDaBarbearia(
             usuarios, barbearias, self.fotos)
