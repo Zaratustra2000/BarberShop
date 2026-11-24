@@ -53,7 +53,13 @@ class RepositorioDeBarbearias(ABC):
 
     @abstractmethod
     def no_bairro(self, bairro_chave: str) -> List[Barbearia]:
-        """Barbearias cuja chave de bairro (normalizada) é igual."""
+        """Barbearias ativas cuja chave de bairro contém o trecho
+        normalizado.
+        """
+
+    @abstractmethod
+    def ativas(self) -> List[Barbearia]:
+        """Todas as barbearias ativas."""
 
     @abstractmethod
     def com_blocos_do_barbeiro(self, barbeiro_id: str) -> List[Barbearia]:

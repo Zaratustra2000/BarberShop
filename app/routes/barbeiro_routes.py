@@ -33,15 +33,15 @@ def cadastrar_servico():
 @requer_papel("barbeiro")
 def busca():
     bairro = request.args.get("bairro", "").strip()
-    ofertas = (container().buscar_cadeiras_ociosas.executar(bairro)
-               if bairro else [])
+    resultados = container().buscar_cadeiras_ociosas.executar(bairro)
+    ofertas = [o for resultado in resultados for o in resultado.ofertas]
     marcadores = {o.barbearia.id: dict(lat=o.barbearia.latitude,
                                        lng=o.barbearia.longitude,
                                        titulo=o.barbearia.nome,
                                        detalhe=o.barbearia.endereco)
                   for o in ofertas}
     return render_template("barbeiro/busca.html", bairro=bairro,
-                           ofertas=ofertas,
+                           resultados=resultados,
                            marcadores=list(marcadores.values()))
 
 

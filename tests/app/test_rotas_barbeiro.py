@@ -33,6 +33,18 @@ def test_barbeiro_busca_por_bairro_e_reserva_bloco(client):
     assert "R$ 60,00" in pagina
 
 
+def test_barbeiro_ve_barbearias_ativas_sem_informar_bairro(client):
+    from tests.app.fluxo import dono_publica_horario
+
+    dono_publica_horario(client)
+    cadastrar_e_entrar(client, "barbeiro")
+    pagina = client.get("/barbeiro/busca").get_data(as_text=True)
+
+    assert "Barbearia Exemplo" in pagina
+    assert "Reservar bloco" in pagina
+    assert 'data-mapa-marcadores=' in pagina
+
+
 def test_barbeiro_consulta_perfil_da_barbearia(client):
     from tests.app.fluxo import dono_publica_horario
 

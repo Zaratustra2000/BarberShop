@@ -56,7 +56,10 @@ class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
 
     def no_bairro(self, bairro_chave):
         return self._filtrar(
-            lambda b: b.ativa and b.bairro_chave == bairro_chave)
+            lambda b: b.ativa and bairro_chave in b.bairro_chave)
+
+    def ativas(self):
+        return self._filtrar(lambda b: b.ativa)
 
     def com_blocos_do_barbeiro(self, barbeiro_id):
         return self._filtrar(lambda b: b.blocos_do_barbeiro(barbeiro_id))

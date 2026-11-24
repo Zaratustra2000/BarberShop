@@ -175,7 +175,10 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
 
     def no_bairro(self, bairro_chave):
         return self._carregar(
-            "ativa = 1 AND bairro_chave = ?", bairro_chave)
+            "ativa = 1 AND instr(bairro_chave, ?) > 0", bairro_chave)
+
+    def ativas(self):
+        return self._carregar("ativa = 1")
 
     def com_blocos_do_barbeiro(self, barbeiro_id):
         return self._carregar(

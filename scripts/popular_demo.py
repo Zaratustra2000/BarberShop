@@ -85,7 +85,8 @@ def popular(app):
     c.cadastrar_servico.executar(barbeiro_id=rafa.id, nome="Barba",
                                  preco_centavos=3000, duracao_minutos=30)
 
-    oferta = c.buscar_cadeiras_ociosas.executar("Botafogo")[0]
+    resultado = c.buscar_cadeiras_ociosas.executar("Botafogo")[0]
+    oferta = resultado.ofertas[0]
     c.reservar_bloco_de_horario.executar(
         barbeiro_id=rafa.id, barbearia_id=oferta.barbearia.id,
         horario_ocioso_id=oferta.horario.id, inicio=amanha_as(14, agora),
