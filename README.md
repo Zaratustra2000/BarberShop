@@ -22,6 +22,9 @@ python3 -m venv .venv
 # (opcional) dados sintéticos de demonstração; a senha das contas é demo123
 .venv/bin/python -m scripts.popular_demo
 
+O seed cria também fotos PNG sintéticas para as duas Barbearias, sem
+dependência de imagens externas.
+
 export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
 .venv/bin/flask --app app.main:create_app run
 # abra http://127.0.0.1:5000
