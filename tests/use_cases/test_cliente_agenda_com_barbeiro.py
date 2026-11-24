@@ -14,6 +14,7 @@ from use_cases.consultar_agendamentos_do_cliente import (
     ConsultarAgendamentosDoCliente)
 from use_cases.consultar_perfil_do_barbeiro import ConsultarPerfilDoBarbeiro
 from use_cases.cancelar_agendamento import CancelarAgendamento
+from use_cases.avaliar_agendamento import AvaliarAgendamento
 
 
 def h(hora, minuto=0, dia=7):
@@ -154,6 +155,26 @@ def test_agendamento_no_passado_e_recusado(ctx, cenario):
     ctx.relogio.ajustar(h(15, dia=7))
     with pytest.raises(DadosInvalidos):
         agendar(ctx, cenario["lucas"], cenario["corte"], h(14))
+
+
+def test_cliente_avalia_agendamento_terminado_e_altera_a_nota(ctx, cenario):
+    agendamento = agendar(ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+    ctx.relogio.ajustar(h(15, 11))
+
+    caso = AvaliarAgendamento(
+        ctx.usuarios, ctx.agendamentos,
+        ctx.avaliacoes, ctx.relogio)
+    avaliacao = caso.executar(
+        cliente_id=cenario["lucas"].id,
+        agendamento_id=agendamento.id,
+        nota=4)
+    avaliacao_alterada = caso.executar(
+        cliente_id=cenario["lucas"].id,
+        agendamento_id=agendamento.id,
+        nota=5)
+
+    assert avaliacao_alterada.id == avaliacao.id
+    assert ctx.avaliacoes.do_agendamento(agendamento.id).nota == 5
 
 
 def test_barbeiro_nao_agenda_como_cliente(ctx, cenario):
