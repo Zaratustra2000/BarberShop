@@ -84,6 +84,16 @@ class RepositorioDeAgendamentos(ABC):
         """Agendamentos do cliente em ordem cronológica."""
 
 
+class ArmazenamentoDeFotos(ABC):
+    @abstractmethod
+    def salvar(self, conteudo: bytes, extensao: str) -> str:
+        ...
+
+    @abstractmethod
+    def remover(self, nome_do_arquivo: str) -> None:
+        ...
+
+
 class GeradorDeHashDeSenha(ABC):
     @abstractmethod
     def gerar(self, senha: str) -> str:

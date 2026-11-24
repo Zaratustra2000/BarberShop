@@ -2,7 +2,8 @@
 import os
 import secrets
 
-from flask import Flask, flash, redirect, render_template, request
+from flask import (Flask, flash, redirect, render_template, request,
+                   send_from_directory)
 
 from app.container import Container
 from app.formatos import registrar_filtros
@@ -19,7 +20,18 @@ def create_app(caminho_do_banco=None, relogio=None, secret_key=None):
         "BARBERSHOP_DB", os.path.join(app.instance_path, "barbershop.sqlite3"))
     os.makedirs(os.path.dirname(os.path.abspath(caminho_do_banco)),
                 exist_ok=True)
-    app.extensions["barbershop"] = Container(caminho_do_banco, relogio)
+    app.config["BARBERSHOP_FOTOS_DIR"] = os.environ.get(
+        "BARBERSHOP_FOTOS_DIR",
+        os.path.join(app.instance_path, "fotos-barbearias"))
+    os.makedirs(app.config["BARBERSHOP_FOTOS_DIR"], exist_ok=True)
+    app.extensions["barbershop"] = Container(
+        caminho_do_banco, relogio,
+        diretório_de_fotos=app.config["BARBERSHOP_FOTOS_DIR"])
+
+    @app.get("/fotos/<nome_do_arquivo>")
+    def foto_da_barbearia(nome_do_arquivo):
+        return send_from_directory(
+            app.config["BARBERSHOP_FOTOS_DIR"], nome_do_arquivo)
 
     for modulo in (auth_routes, dono_routes, barbeiro_routes, cliente_routes):
         app.register_blueprint(modulo.bp)

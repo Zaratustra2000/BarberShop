@@ -68,16 +68,18 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
         with self._banco.conexao() as con:
             con.execute(
                 "INSERT INTO barbearias (id, dono_id, nome, endereco, bairro,"
-                " bairro_chave, latitude, longitude, regras) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                " bairro_chave, latitude, longitude, regras, foto_principal) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 "ON CONFLICT(id) DO UPDATE SET nome = excluded.nome, "
                 "endereco = excluded.endereco, bairro = excluded.bairro, "
                 "bairro_chave = excluded.bairro_chave, "
                 "latitude = excluded.latitude, "
-                "longitude = excluded.longitude, regras = excluded.regras",
+                "longitude = excluded.longitude, regras = excluded.regras, "
+                "foto_principal = excluded.foto_principal",
                 (barbearia.id, barbearia.dono_id, barbearia.nome,
                  barbearia.endereco, barbearia.bairro, barbearia.bairro_chave,
-                 barbearia.latitude, barbearia.longitude, barbearia.regras))
+                 barbearia.latitude, barbearia.longitude, barbearia.regras,
+                 barbearia.foto_principal))
             ids_presentes = [c.id for c in barbearia.cadeiras]
             if ids_presentes:
                 placeholders = ",".join("?" for _ in ids_presentes)
@@ -140,7 +142,8 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
             id=linha["id"], dono_id=linha["dono_id"], nome=linha["nome"],
             endereco=linha["endereco"], bairro=linha["bairro"],
             latitude=linha["latitude"], longitude=linha["longitude"],
-            regras=linha["regras"])
+            regras=linha["regras"],
+            foto_principal=linha["foto_principal"])
         barbearia.cadeiras = [
             Cadeira(id=c["id"], nome=c["nome"]) for c in con.execute(
                 "SELECT * FROM cadeiras WHERE barbearia_id = ? "

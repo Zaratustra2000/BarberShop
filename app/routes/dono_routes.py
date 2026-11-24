@@ -1,6 +1,7 @@
 """Controllers do dono (US2): traduzem formulários em chamadas de casos de
 uso e o resultado em HTML. Nenhuma regra de negócio mora aqui."""
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import (Blueprint, flash, redirect, render_template, request,
+                   url_for)
 
 from app.formatos import (ler_data_hora, ler_decimal, ler_inteiro,
                           reais_para_centavos)
@@ -76,6 +77,61 @@ def editar_perfil(barbearia_id):
         quantidade_de_cadeiras=ler_inteiro(
             form.get("quantidade_de_cadeiras"), "quantidade de cadeiras"))
     return redirect(url_for("dono.barbearia", barbearia_id=barbearia.id))
+
+
+@bp.post("/barbearias/<barbearia_id>/foto")
+@requer_papel("dono")
+def atualizar_foto(barbearia_id):
+    arquivo = request.files.get("foto")
+    if arquivo is None or not arquivo.filename:
+        flash("Envie uma imagem JPG, PNG ou WebP.", "erro")
+        return redirect(url_for("dono.barbearia",
+                                barbearia_id=barbearia_id))
+
+    conteudo = arquivo.read()
+    extensao = _extensao_de_imagem(conteudo)
+    if extensao is None:
+        flash("Formato inválido. Envie uma imagem JPG, PNG ou WebP.", "erro")
+        return redirect(url_for("dono.barbearia",
+                                barbearia_id=barbearia_id))
+
+    anterior = container().consultar_barbearias_do_dono.uma(
+        usuario_id(), barbearia_id)
+    nome_gerado = container().fotos.salvar(conteudo, extensao)
+
+    container().editar_perfil_da_barbearia.atualizar_foto_principal(
+        dono_id=usuario_id(), barbearia_id=barbearia_id,
+        nome_do_arquivo=nome_gerado)
+
+    if anterior.foto_principal:
+        container().fotos.remover(anterior.foto_principal)
+
+    return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
+
+
+def _extensao_de_imagem(conteudo):
+    if (conteudo.startswith(b"\xff\xd8")
+            and conteudo.endswith(b"\xff\xd9")):
+        return ".jpg"
+    if conteudo.startswith(b"\x89PNG\r\n\x1a\n"):
+        if _png_valido(conteudo):
+            return ".png"
+    if (len(conteudo) >= 20 and conteudo[:4] == b"RIFF"
+            and conteudo[8:12] == b"WEBP"
+            and int.from_bytes(conteudo[4:8], "little") == len(conteudo) - 8):
+        return ".webp"
+    return None
+
+
+def _png_valido(conteudo):
+    if len(conteudo) < 33:
+        return False
+    tamanho = int.from_bytes(conteudo[8:12], "big")
+    if tamanho != 13 or conteudo[12:16] != b"IHDR":
+        return False
+    largura = int.from_bytes(conteudo[16:20], "big")
+    altura = int.from_bytes(conteudo[20:24], "big")
+    return largura > 0 and altura > 0 and b"IEND" in conteudo
 
 
 @bp.post("/barbearias/<barbearia_id>/cadeiras/<cadeira_id>/remover")

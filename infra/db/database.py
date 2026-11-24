@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS barbearias (
     bairro_chave TEXT NOT NULL,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
-    regras TEXT NOT NULL DEFAULT ''
+    regras TEXT NOT NULL DEFAULT '',
+    foto_principal TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS ix_barbearias_bairro ON barbearias(bairro_chave);
 CREATE TABLE IF NOT EXISTS cadeiras (
@@ -95,3 +96,11 @@ class BancoSQLite:
     def criar_tabelas(self) -> None:
         with self.conexao() as con:
             con.executescript(ESQUEMA)
+            colunas = {
+                coluna["name"]
+                for coluna in con.execute("PRAGMA table_info(barbearias)")
+            }
+            if "foto_principal" not in colunas:
+                con.execute(
+                    "ALTER TABLE barbearias "
+                    "ADD COLUMN foto_principal TEXT NOT NULL DEFAULT ''")

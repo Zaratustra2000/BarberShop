@@ -54,6 +54,7 @@ class Barbearia:
     latitude: float
     longitude: float
     regras: str = ""
+    foto_principal: str = ""
     cadeiras: List[Cadeira] = field(default_factory=list)
     horarios_ociosos: List[HorarioOcioso] = field(default_factory=list)
     blocos: List[BlocoDeHorario] = field(default_factory=list)
@@ -86,6 +87,9 @@ class Barbearia:
         self.longitude = longitude
         self.regras = regras
         self.__post_init__()
+
+    def definir_foto_principal(self, nome_do_arquivo: str) -> None:
+        self.foto_principal = nome_do_arquivo
 
     def adicionar_cadeira(self) -> Cadeira:
         cadeira = Cadeira(nome="Cadeira {}".format(len(self.cadeiras) + 1))

@@ -1,3 +1,6 @@
+import base64
+from io import BytesIO
+
 from tests.app.conftest import cadastrar_e_entrar, extrair
 from tests.app.fluxo import dono_publica_horario, sair
 
@@ -48,13 +51,24 @@ def test_cliente_consulta_perfil_da_barbearia(client):
     from tests.app.fluxo import dono_publica_horario
 
     dono_publica_horario(client)
-    cadastrar_e_entrar(client, "cliente")
     with client.application.app_context():
         container = client.application.extensions["barbershop"]
         dono = container.usuarios.por_email("dono@exemplo.com")
         barbearia_id = container.consultar_barbearias_do_dono.executar(
             dono.id)[0].id
+    cadastrar_e_entrar(client, "dono")
+    client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(
+            base64.b64decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lE"
+                "QVR42mP8/x8AAusB9Wl/4nQAAAAASUVORK5CYII=")),
+                 "barbearia.png")},
+        content_type="multipart/form-data",
+        follow_redirects=True)
+    cadastrar_e_entrar(client, "cliente")
     perfil = client.get(
         "/cliente/barbearias/{}".format(barbearia_id)).get_data(
             as_text=True)
     assert "Barbearia Exemplo" in perfil
+    assert "/fotos/" in perfil

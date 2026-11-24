@@ -1,4 +1,13 @@
+from io import BytesIO
+import base64
+
 from tests.app.conftest import cadastrar_e_entrar, extrair
+
+
+def png_sintetico():
+    return base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/"
+        "x8AAusB9Wl/4nQAAAAASUVORK5CYII=")
 
 
 def criar_barbearia(client):
@@ -75,3 +84,47 @@ def test_dono_edita_perfil_e_adiciona_cadeiras(client):
         follow_redirects=True).get_data(as_text=True)
     assert "Nova Barbershop" in pagina
     assert "Cadeira 3" in pagina
+
+
+def test_dono_envia_e_substitui_foto_principal(client):
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    pagina = client.get("/dono").get_data(as_text=True)
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
+
+    pagina = client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(png_sintetico()), "barbearia.png")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+    assert "/fotos/" in pagina
+
+
+def test_foto_invalida_nao_altera_a_foto_existente(client):
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    pagina = client.get("/dono").get_data(as_text=True)
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
+    client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(png_sintetico()), "original.png")},
+        content_type="multipart/form-data",
+        follow_redirects=True)
+
+    pagina = client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(b"texto-invalido"), "arquivo.txt")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+    assert "JPG, PNG ou WebP" in pagina
+    assert "/fotos/" in pagina
+    assert "arquivo.txt" not in pagina
+
+    pagina = client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(
+            b"RIFF\x10\x00\x00\x00WEBPVP8 " + b"12345678"),
+                       "outra-foto.webp")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+    assert "/fotos/" in pagina

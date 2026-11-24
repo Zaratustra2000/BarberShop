@@ -39,3 +39,12 @@ class EditarPerfilDaBarbearia:
         barbearia.remover_cadeira(cadeira_id)
         self._barbearias.salvar(barbearia)
         return barbearia
+
+    def atualizar_foto_principal(self, dono_id: str, barbearia_id: str,
+                                 nome_do_arquivo: str):
+        exigir_usuario(self._usuarios, dono_id, Papel.DONO)
+        barbearia = barbearia_do_dono(
+            self._barbearias, dono_id, barbearia_id)
+        barbearia.definir_foto_principal(nome_do_arquivo)
+        self._barbearias.salvar(barbearia)
+        return barbearia

@@ -42,6 +42,19 @@
   </form>
 </article>
 
+<article>
+  <h3>Foto principal</h3>
+  {% if barbearia.foto_principal %}
+  <img src="{{ url_for('foto_da_barbearia', nome_do_arquivo=barbearia.foto_principal) }}" alt="Foto da {{ barbearia.nome }}">
+  {% endif %}
+  <form method="post" action="{{ url_for('dono.atualizar_foto', barbearia_id=barbearia.id) }}" enctype="multipart/form-data">
+    <label>Arquivo JPG, PNG ou WebP
+      <input type="file" name="foto" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required>
+    </label>
+    <button type="submit">Enviar foto</button>
+  </form>
+</article>
+
 <h3>Horários ociosos</h3>
 <table>
   <thead><tr><th>Cadeira</th><th>Início</th><th>Fim</th><th>Preço/hora</th></tr></thead>

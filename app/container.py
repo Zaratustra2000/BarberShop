@@ -4,6 +4,7 @@ Aqui os adapters de infraestrutura são ligados às portas que os casos de uso
 esperam. Trocar SQLite por outro banco significa mudar apenas este arquivo.
 """
 from infra.db.database import BancoSQLite
+from infra.fotos import ArmazenamentoDeFotosLocal
 from infra.repositories import sqlite
 from infra.seguranca import GeradorDeHashWerkzeug, RelogioDoSistema
 from use_cases.agendar_atendimento import AgendarAtendimento
@@ -26,7 +27,8 @@ from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
 
 
 class Container:
-    def __init__(self, caminho_do_banco, relogio=None):
+    def __init__(self, caminho_do_banco, relogio=None,
+                 diretório_de_fotos=None):
         banco = BancoSQLite(caminho_do_banco)
         banco.criar_tabelas()
         self.relogio = relogio or RelogioDoSistema()
@@ -36,6 +38,8 @@ class Container:
         barbearias = sqlite.RepositorioDeBarbeariasSQLite(banco)
         servicos = sqlite.RepositorioDeServicosSQLite(banco)
         agendamentos = sqlite.RepositorioDeAgendamentosSQLite(banco)
+        diretório_de_fotos = diretório_de_fotos or "instance/fotos-barbearias"
+        self.fotos = ArmazenamentoDeFotosLocal(diretório_de_fotos)
 
         self.usuarios = usuarios
         self.cadastrar_barbearia = CadastrarBarbearia(usuarios, barbearias)

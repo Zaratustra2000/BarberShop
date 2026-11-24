@@ -45,6 +45,12 @@ def test_perfil_da_barbearia_pode_ser_editado():
                           -22.967, -43.178, "Sem atrasos.")
 
 
+def test_barbearia_pode_receber_foto_principal():
+    b = barbearia()
+    b.definir_foto_principal("barbearia-exemplo.webp")
+    assert b.foto_principal == "barbearia-exemplo.webp"
+
+
 def test_cadeira_sem_referencias_pode_ser_removida():
     b = barbearia()
     cadeira = b.adicionar_cadeira()

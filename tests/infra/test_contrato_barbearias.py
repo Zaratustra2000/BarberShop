@@ -58,6 +58,15 @@ def test_editar_barbearia_preserva_horarios(repos):
     assert len(salva.cadeiras) == 1
 
 
+def test_foto_principal_e_persistida(repos):
+    barbearias = repos["barbearias"]
+    b = nova_barbearia()
+    b.definir_foto_principal("barbearia-exemplo.webp")
+    barbearias.salvar(b)
+    assert barbearias.por_id(b.id).foto_principal == (
+        "barbearia-exemplo.webp")
+
+
 def test_remover_cadeira_sem_referencias(repos):
     barbearias = repos["barbearias"]
     b = nova_barbearia()
