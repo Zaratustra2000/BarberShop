@@ -128,3 +128,31 @@ def test_foto_invalida_nao_altera_a_foto_existente(client):
         content_type="multipart/form-data",
         follow_redirects=True).get_data(as_text=True)
     assert "/fotos/" in pagina
+
+
+def test_foto_acima_de_cinco_mb_nao_substitui_a_foto_existente(client):
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    pagina = client.get("/dono").get_data(as_text=True)
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
+
+    tamanho_limite = 5 * 1024 * 1024
+    foto_no_limite = png_sintetico() + (
+        b"\0" * (tamanho_limite - len(png_sintetico())))
+    pagina = client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(foto_no_limite), "barbearia.png")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+    foto_existente = extrair(r'/fotos/([^"]+)', pagina)
+
+    foto_acima_do_limite = foto_no_limite + b"\0"
+    pagina = client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(foto_acima_do_limite),
+                       "barbearia-grande.png")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+
+    assert "A imagem deve ter no máximo 5 MB." in pagina
+    assert "/fotos/{}".format(foto_existente) in pagina

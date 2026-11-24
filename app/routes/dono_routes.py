@@ -88,7 +88,13 @@ def atualizar_foto(barbearia_id):
         return redirect(url_for("dono.barbearia",
                                 barbearia_id=barbearia_id))
 
-    conteudo = arquivo.read()
+    limite = 5 * 1024 * 1024
+    conteudo = arquivo.read(limite + 1)
+    if len(conteudo) > limite:
+        flash("A imagem deve ter no máximo 5 MB.", "erro")
+        return redirect(url_for("dono.barbearia",
+                                barbearia_id=barbearia_id))
+
     extensao = _extensao_de_imagem(conteudo)
     if extensao is None:
         flash("Formato inválido. Envie uma imagem JPG, PNG ou WebP.", "erro")
