@@ -33,3 +33,16 @@ def test_regra_violada_volta_com_mensagem(client):
         headers={"Referer": "/dono/barbearias/nova"},
         follow_redirects=True).get_data(as_text=True)
     assert "Informe o nome" in pagina
+
+
+def test_mapa_da_nova_barbearia_usa_tiles_oficiais_e_atribuicao(client):
+    cadastrar_e_entrar(client, "dono")
+
+    pagina = client.get("/dono/barbearias/nova").get_data(as_text=True)
+    script = client.get("/static/mapa.js").get_data(as_text=True)
+
+    assert 'data-mapa-seletor' in pagina
+    assert 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' in script
+    assert '{s}.tile.openstreetmap.org' not in script
+    assert 'https://www.openstreetmap.org/copyright' in script
+    assert 'chave' not in script.lower()
