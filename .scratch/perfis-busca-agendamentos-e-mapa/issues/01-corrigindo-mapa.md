@@ -10,7 +10,7 @@
 - [x] A atribuição visível inclui links para os créditos do OpenStreetMap exigidos pela política.
 - [x] Selecionar a localização da Barbearia e visualizar marcadores continua funcionando.
 - [x] A aplicação não adiciona chave externa nem faz requisições aos tiles em testes automatizados.
-- [ ] A exibição é verificada manualmente no navegador, registrando que a disponibilidade depende do serviço externo.
+- [x] A exibição é verificada manualmente no navegador, registrando que a disponibilidade depende do serviço externo.
 
 ## Answer
 
