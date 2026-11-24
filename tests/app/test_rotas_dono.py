@@ -146,6 +146,19 @@ def test_foto_invalida_nao_altera_a_foto_existente(client):
     assert "/fotos/" in pagina
     assert "arquivo-falso.jpg" not in pagina
 
+    ihdr_bomba = struct.pack(">IIBBBBB", 100000, 100000, 8, 6, 0, 0, 0)
+    png_bomba = (b"\x89PNG\r\n\x1a\n"
+                 + chunk_png(b"IHDR", ihdr_bomba)
+                 + chunk_png(b"IEND", b""))
+    pagina = client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(png_bomba), "imagem-bomba.png")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+    assert "Formato inválido. Envie uma imagem JPG, PNG ou WebP." in pagina
+    assert "/fotos/" in pagina
+    assert "imagem-bomba.png" not in pagina
+
     pagina = client.post(
         "/dono/barbearias/{}/foto".format(barbearia_id),
         data={"foto": (BytesIO(
