@@ -31,6 +31,21 @@ class HorarioOcioso:
 
 
 @dataclass
+class BlocoDeHorario:
+    horario_ocioso_id: str
+    cadeira_id: str
+    barbeiro_id: str
+    periodo: Periodo
+    valor_centavos: int
+    id: str = field(default_factory=novo_id)
+
+
+def valor_do_bloco(preco_por_hora_centavos: int, minutos: int) -> int:
+    """Preço proporcional à duração, arredondado ao centavo mais próximo."""
+    return (preco_por_hora_centavos * minutos + 30) // 60
+
+
+@dataclass
 class Barbearia:
     dono_id: str
     nome: str
@@ -41,6 +56,7 @@ class Barbearia:
     regras: str = ""
     cadeiras: List[Cadeira] = field(default_factory=list)
     horarios_ociosos: List[HorarioOcioso] = field(default_factory=list)
+    blocos: List[BlocoDeHorario] = field(default_factory=list)
     id: str = field(default_factory=novo_id)
 
     def __post_init__(self):
@@ -86,3 +102,37 @@ class Barbearia:
         horario = HorarioOcioso(cadeira_id, periodo, preco_por_hora_centavos)
         self.horarios_ociosos.append(horario)
         return horario
+
+    def horario_ocioso(self, horario_ocioso_id: str) -> HorarioOcioso:
+        for horario in self.horarios_ociosos:
+            if horario.id == horario_ocioso_id:
+                return horario
+        raise NaoEncontrado("Horário ocioso não encontrado.")
+
+    def periodos_livres(self, horario_ocioso_id: str) -> List[Periodo]:
+        horario = self.horario_ocioso(horario_ocioso_id)
+        return horario.periodo.subtrair(
+            b.periodo for b in self.blocos
+            if b.cadeira_id == horario.cadeira_id)
+
+    def reservar_bloco(self, horario_ocioso_id: str, barbeiro_id: str,
+                       periodo: Periodo) -> BlocoDeHorario:
+        horario = self.horario_ocioso(horario_ocioso_id)
+        if not horario.periodo.contem(periodo):
+            raise DadosInvalidos(
+                "O bloco precisa caber dentro do horário ocioso.")
+        for bloco in self.blocos:
+            if (bloco.cadeira_id == horario.cadeira_id
+                    and bloco.periodo.sobrepoe(periodo)):
+                raise ConflitoDeHorario(
+                    "Já existe um bloco reservado nessa cadeira e período.")
+        bloco = BlocoDeHorario(
+            horario_ocioso_id=horario.id, cadeira_id=horario.cadeira_id,
+            barbeiro_id=barbeiro_id, periodo=periodo,
+            valor_centavos=valor_do_bloco(horario.preco_por_hora_centavos,
+                                          periodo.minutos))
+        self.blocos.append(bloco)
+        return bloco
+
+    def blocos_do_barbeiro(self, barbeiro_id: str) -> List[BlocoDeHorario]:
+        return [b for b in self.blocos if b.barbeiro_id == barbeiro_id]

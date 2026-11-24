@@ -1,7 +1,8 @@
 """Adapters SQLite das portas de repositório (veja docs/adr/0002)."""
 from datetime import datetime
 
-from domain.barbearia import Barbearia, Cadeira, HorarioOcioso
+from domain.barbearia import (Barbearia, BlocoDeHorario, Cadeira,
+                              HorarioOcioso)
 from domain.periodo import Periodo
 from domain.servico import Servico
 from domain.usuario import Papel, Usuario
@@ -77,6 +78,14 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
                 [(h.id, barbearia.id, h.cadeira_id, _data(h.periodo.inicio),
                   _data(h.periodo.fim), h.preco_por_hora_centavos)
                  for h in barbearia.horarios_ociosos])
+            con.executemany(
+                "INSERT OR IGNORE INTO blocos (id, barbearia_id, "
+                "horario_ocioso_id, cadeira_id, barbeiro_id, inicio, fim, "
+                "valor_centavos) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                [(b.id, barbearia.id, b.horario_ocioso_id, b.cadeira_id,
+                  b.barbeiro_id, _data(b.periodo.inicio),
+                  _data(b.periodo.fim), b.valor_centavos)
+                 for b in barbearia.blocos])
 
     def por_id(self, barbearia_id):
         encontradas = self._carregar("id = ?", barbearia_id)
@@ -84,6 +93,14 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
 
     def do_dono(self, dono_id):
         return self._carregar("dono_id = ?", dono_id)
+
+    def no_bairro(self, bairro_chave):
+        return self._carregar("bairro_chave = ?", bairro_chave)
+
+    def com_blocos_do_barbeiro(self, barbeiro_id):
+        return self._carregar(
+            "id IN (SELECT barbearia_id FROM blocos WHERE barbeiro_id = ?)",
+            barbeiro_id)
 
     def _carregar(self, filtro, *parametros):
         with self._banco.conexao() as con:
@@ -109,6 +126,15 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
                               "preco_por_hora_centavos"])
             for h in con.execute(
                 "SELECT * FROM horarios_ociosos WHERE barbearia_id = ? "
+                "ORDER BY inicio, id", (barbearia.id,))]
+        barbearia.blocos = [
+            BlocoDeHorario(id=b["id"],
+                           horario_ocioso_id=b["horario_ocioso_id"],
+                           cadeira_id=b["cadeira_id"],
+                           barbeiro_id=b["barbeiro_id"], periodo=_periodo(b),
+                           valor_centavos=b["valor_centavos"])
+            for b in con.execute(
+                "SELECT * FROM blocos WHERE barbearia_id = ? "
                 "ORDER BY inicio, id", (barbearia.id,))]
         return barbearia
 

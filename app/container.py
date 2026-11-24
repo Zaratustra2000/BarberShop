@@ -7,12 +7,15 @@ from infra.db.database import BancoSQLite
 from infra.repositories import sqlite
 from infra.seguranca import GeradorDeHashWerkzeug, RelogioDoSistema
 from use_cases.autenticar_usuario import AutenticarUsuario
+from use_cases.buscar_cadeiras_ociosas import BuscarCadeirasOciosas
 from use_cases.cadastrar_barbearia import CadastrarBarbearia
 from use_cases.cadastrar_servico import (CadastrarServico,
                                          ConsultarServicosDoBarbeiro)
 from use_cases.cadastrar_usuario import CadastrarUsuario
 from use_cases.consultar_barbearias_do_dono import ConsultarBarbeariasDoDono
+from use_cases.consultar_agenda_do_barbeiro import ConsultarAgendaDoBarbeiro
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
+from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
 
 
 class Container:
@@ -35,6 +38,12 @@ class Container:
         self.cadastrar_servico = CadastrarServico(usuarios, servicos)
         self.consultar_servicos_do_barbeiro = ConsultarServicosDoBarbeiro(
             servicos)
+        self.buscar_cadeiras_ociosas = BuscarCadeirasOciosas(
+            barbearias, self.relogio)
+        self.reservar_bloco_de_horario = ReservarBlocoDeHorario(
+            usuarios, barbearias, self.relogio)
+        self.consultar_agenda_do_barbeiro = ConsultarAgendaDoBarbeiro(
+            barbearias)
         self.cadastrar_usuario = CadastrarUsuario(usuarios, gerador_de_hash)
         self.autenticar_usuario = AutenticarUsuario(usuarios,
                                                     gerador_de_hash)

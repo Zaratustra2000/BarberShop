@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Buscar cadeiras{% endblock %}
+{% block head %}{% include "_leaflet.html" %}{% endblock %}
+{% block conteudo %}
+<h2>Buscar cadeiras ociosas</h2>
+<form method="get" role="search">
+  <input name="bairro" value="{{ bairro }}" placeholder="Bairro (ex.: Botafogo)" required>
+  <button type="submit">Buscar</button>
+</form>
+{% if bairro %}
+  {% if ofertas %}
+    <div class="mapa" data-mapa-marcadores='{{ marcadores|tojson }}'></div>
+  {% endif %}
+  {% for o in ofertas %}
+    <article>
+      <header>
+        <strong>{{ o.barbearia.nome }}</strong> · {{ o.cadeira.nome }} · {{ o.horario.preco_por_hora_centavos|reais }}/hora
+        <br><small>{{ o.barbearia.endereco }} · {{ o.barbearia.bairro }}</small>
+      </header>
+      {% if o.barbearia.regras %}<p><small><strong>Regras da casa:</strong> {{ o.barbearia.regras }}</small></p>{% endif %}
+      <p>Livre:
+        {% for p in o.periodos_livres %}
+          <span class="livre">{{ p.inicio.strftime('%d/%m') }} {{ p.inicio|hora }} às {{ p.fim|hora }}</span>{% if not loop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+      <form method="post" action="{{ url_for('barbeiro.reservar_bloco') }}">
+        <input type="hidden" name="barbearia_id" value="{{ o.barbearia.id }}">
+        <input type="hidden" name="horario_ocioso_id" value="{{ o.horario.id }}">
+        <div class="grid">
+          <label>Início <input type="datetime-local" name="inicio" value="{{ o.periodos_livres[0].inicio.strftime('%Y-%m-%dT%H:%M') }}" required></label>
+          <label>Fim <input type="datetime-local" name="fim" value="{{ o.periodos_livres[0].fim.strftime('%Y-%m-%dT%H:%M') }}" required></label>
+          <label>&nbsp;<button type="submit">Reservar bloco</button></label>
+        </div>
+      </form>
+    </article>
+  {% else %}
+    <p>Nenhuma cadeira ociosa em “{{ bairro }}” por enquanto.</p>
+  {% endfor %}
+{% endif %}
+{% endblock %}

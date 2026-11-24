@@ -2,6 +2,20 @@
 {% block titulo %}Minha agenda{% endblock %}
 {% block conteudo %}
 <h2>Minha agenda</h2>
+<a href="{{ url_for('barbeiro.busca') }}" role="button">Buscar cadeiras ociosas</a>
+
+<h3>Meus blocos de horário</h3>
+{% for item in agenda %}
+  <article>
+    <header>
+      <strong>{{ item.barbearia.nome }}</strong> · {{ item.bloco.periodo.inicio|data_hora }} às {{ item.bloco.periodo.fim|hora }}
+      · aluguel {{ item.bloco.valor_centavos|reais }}
+      <br><small>{{ item.barbearia.endereco }} · {{ item.barbearia.bairro }}</small>
+    </header>
+  </article>
+{% else %}
+  <p>Você ainda não reservou nenhum bloco de horário.</p>
+{% endfor %}
 
 <h3>Meus serviços</h3>
 <table>

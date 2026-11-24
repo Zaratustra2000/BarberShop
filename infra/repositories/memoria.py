@@ -43,8 +43,16 @@ class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
     def do_dono(self, dono_id):
         return self._filtrar(lambda b: b.dono_id == dono_id)
 
+    def no_bairro(self, bairro_chave):
+        return self._filtrar(lambda b: b.bairro_chave == bairro_chave)
+
+    def com_blocos_do_barbeiro(self, barbeiro_id):
+        return self._filtrar(lambda b: b.blocos_do_barbeiro(barbeiro_id))
+
     def _filtrar(self, criterio):
-        return [deepcopy(b) for b in self._dados.values() if criterio(b)]
+        encontradas = [b for b in self._dados.values() if criterio(b)]
+        return [deepcopy(b) for b in
+                sorted(encontradas, key=lambda b: (b.nome, b.id))]
 
 
 class RepositorioDeServicosEmMemoria(RepositorioDeServicos):

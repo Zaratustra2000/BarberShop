@@ -84,8 +84,8 @@ def com_horario_ocioso(preco=3000):
 
 def test_bloco_custa_preco_por_hora_vezes_duracao():
     b, horario = com_horario_ocioso(preco=3000)
-    bloco = b.reservar_bloco(horario.id, "rafa", Periodo(hora(14),
-                                                          hora(15, 30)))
+    bloco = b.reservar_bloco(horario.id, "rafa",
+                             Periodo(hora(14), hora(15, 30)))
     assert bloco.valor_centavos == 4500
     assert b.blocos == [bloco]
 

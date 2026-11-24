@@ -1,7 +1,7 @@
 from domain.barbearia import Barbearia
 from domain.erros import DadosInvalidos
 from domain.usuario import Papel
-from use_cases.cadastrar_servico import exigir_usuario
+from use_cases.acesso import exigir_usuario
 from use_cases.portas import RepositorioDeBarbearias, RepositorioDeUsuarios
 
 MAXIMO_DE_CADEIRAS = 30

@@ -35,6 +35,17 @@ CREATE TABLE IF NOT EXISTS horarios_ociosos (
     fim TEXT NOT NULL,
     preco_por_hora_centavos INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS blocos (
+    id TEXT PRIMARY KEY,
+    barbearia_id TEXT NOT NULL REFERENCES barbearias(id),
+    horario_ocioso_id TEXT NOT NULL REFERENCES horarios_ociosos(id),
+    cadeira_id TEXT NOT NULL REFERENCES cadeiras(id),
+    barbeiro_id TEXT NOT NULL,
+    inicio TEXT NOT NULL,
+    fim TEXT NOT NULL,
+    valor_centavos INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_blocos_barbeiro ON blocos(barbeiro_id);
 CREATE TABLE IF NOT EXISTS servicos (
     id TEXT PRIMARY KEY,
     barbeiro_id TEXT NOT NULL,

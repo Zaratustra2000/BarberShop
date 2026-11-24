@@ -42,6 +42,14 @@ class RepositorioDeBarbearias(ABC):
     def do_dono(self, dono_id: str) -> List[Barbearia]:
         ...
 
+    @abstractmethod
+    def no_bairro(self, bairro_chave: str) -> List[Barbearia]:
+        """Barbearias cuja chave de bairro (normalizada) é igual."""
+
+    @abstractmethod
+    def com_blocos_do_barbeiro(self, barbeiro_id: str) -> List[Barbearia]:
+        """Barbearias onde o barbeiro tem ao menos um bloco de horário."""
+
 
 class RepositorioDeServicos(ABC):
     @abstractmethod

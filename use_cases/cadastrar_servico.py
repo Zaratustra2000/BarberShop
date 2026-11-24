@@ -1,18 +1,9 @@
 from typing import List
 
-from domain.erros import NaoEncontrado
 from domain.servico import Servico
-from domain.usuario import Papel, Usuario
+from domain.usuario import Papel
+from use_cases.acesso import exigir_usuario
 from use_cases.portas import RepositorioDeServicos, RepositorioDeUsuarios
-
-
-def exigir_usuario(usuarios: RepositorioDeUsuarios, usuario_id: str,
-                   papel: Papel) -> Usuario:
-    usuario = usuarios.por_id(usuario_id)
-    if usuario is None:
-        raise NaoEncontrado("Usuário não encontrado.")
-    usuario.exigir_papel(papel)
-    return usuario
 
 
 class CadastrarServico:
