@@ -1,13 +1,29 @@
 from io import BytesIO
-import base64
+import struct
+import zlib
 
 from tests.app.conftest import cadastrar_e_entrar, extrair
 
 
-def png_sintetico():
-    return base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/"
-        "x8AAusB9Wl/4nQAAAAASUVORK5CYII=")
+def chunk_png(tipo, dados):
+    corpo = tipo + dados
+    return (struct.pack(">I", len(dados)) + corpo
+            + struct.pack(">I", zlib.crc32(corpo) & 0xffffffff))
+
+
+def png_sintetico(tamanho=None):
+    assinaturas = b"\x89PNG\r\n\x1a\n"
+    ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)
+    idat = zlib.compress(b"\x00\x00\x00\x00\xff")
+    prefixo = assinaturas + chunk_png(b"IHDR", ihdr)
+    prefixo += chunk_png(b"IDAT", idat)
+    iend = chunk_png(b"IEND", b"")
+    if tamanho is None:
+        return prefixo + iend
+    tamanho_padding = tamanho - len(prefixo) - len(iend) - 12
+    if tamanho_padding < 1:
+        raise ValueError("Tamanho de PNG sintético muito pequeno")
+    return prefixo + chunk_png(b"tEXt", b"x" * tamanho_padding) + iend
 
 
 def criar_barbearia(client):
@@ -122,6 +138,16 @@ def test_foto_invalida_nao_altera_a_foto_existente(client):
 
     pagina = client.post(
         "/dono/barbearias/{}/foto".format(barbearia_id),
+        data={"foto": (BytesIO(b"\xff\xd8dados-falsos\xff\xd9"),
+                       "arquivo-falso.jpg")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+    assert "Formato inválido. Envie uma imagem JPG, PNG ou WebP." in pagina
+    assert "/fotos/" in pagina
+    assert "arquivo-falso.jpg" not in pagina
+
+    pagina = client.post(
+        "/dono/barbearias/{}/foto".format(barbearia_id),
         data={"foto": (BytesIO(
             b"RIFF\x10\x00\x00\x00WEBPVP8 " + b"12345678"),
                        "outra-foto.webp")},
@@ -137,8 +163,7 @@ def test_foto_acima_de_cinco_mb_nao_substitui_a_foto_existente(client):
     barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
 
     tamanho_limite = 5 * 1024 * 1024
-    foto_no_limite = png_sintetico() + (
-        b"\0" * (tamanho_limite - len(png_sintetico())))
+    foto_no_limite = png_sintetico(tamanho=tamanho_limite)
     pagina = client.post(
         "/dono/barbearias/{}/foto".format(barbearia_id),
         data={"foto": (BytesIO(foto_no_limite), "barbearia.png")},

@@ -1,8 +1,23 @@
-import base64
 from io import BytesIO
+import struct
+import zlib
 
 from tests.app.conftest import cadastrar_e_entrar, extrair
 from tests.app.fluxo import dono_publica_horario, sair
+
+
+def png_sintetico():
+    assinaturas = b"\x89PNG\r\n\x1a\n"
+    ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)
+    idat = zlib.compress(b"\x00\x00\x00\x00\xff")
+
+    def chunk(tipo, dados):
+        corpo = tipo + dados
+        return (struct.pack(">I", len(dados)) + corpo
+                + struct.pack(">I", zlib.crc32(corpo) & 0xffffffff))
+
+    return (assinaturas + chunk(b"IHDR", ihdr)
+            + chunk(b"IDAT", idat) + chunk(b"IEND", b""))
 
 
 def barbeiro_pronto_para_atender(client):
@@ -59,11 +74,7 @@ def test_cliente_consulta_perfil_da_barbearia(client):
     cadastrar_e_entrar(client, "dono")
     client.post(
         "/dono/barbearias/{}/foto".format(barbearia_id),
-        data={"foto": (BytesIO(
-            base64.b64decode(
-                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lE"
-                "QVR42mP8/x8AAusB9Wl/4nQAAAAASUVORK5CYII=")),
-                 "barbearia.png")},
+        data={"foto": (BytesIO(png_sintetico()), "barbearia.png")},
         content_type="multipart/form-data",
         follow_redirects=True)
     cadastrar_e_entrar(client, "cliente")

@@ -24,6 +24,7 @@ from use_cases.consultar_perfil_da_barbearia import ConsultarPerfilDaBarbearia
 from use_cases.editar_perfil_da_barbearia import EditarPerfilDaBarbearia
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
 from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
+from use_cases.validar_foto_da_barbearia import ValidarFotoDaBarbearia
 
 
 class Container:
@@ -40,6 +41,7 @@ class Container:
         agendamentos = sqlite.RepositorioDeAgendamentosSQLite(banco)
         diretório_de_fotos = diretório_de_fotos or "instance/fotos-barbearias"
         self.fotos = ArmazenamentoDeFotosLocal(diretório_de_fotos)
+        self.validar_foto_da_barbearia = ValidarFotoDaBarbearia()
 
         self.usuarios = usuarios
         self.cadastrar_barbearia = CadastrarBarbearia(usuarios, barbearias)

@@ -6,6 +6,8 @@ from flask import (Blueprint, flash, redirect, render_template, request,
 from app.formatos import (ler_data_hora, ler_decimal, ler_inteiro,
                           reais_para_centavos)
 from app.routes.sessao import container, requer_papel, usuario_id
+from domain.erros import DadosInvalidos
+from use_cases.validar_foto_da_barbearia import LIMITE_DE_FOTO
 
 bp = Blueprint("dono", __name__, url_prefix="/dono")
 
@@ -88,16 +90,11 @@ def atualizar_foto(barbearia_id):
         return redirect(url_for("dono.barbearia",
                                 barbearia_id=barbearia_id))
 
-    limite = 5 * 1024 * 1024
-    conteudo = arquivo.read(limite + 1)
-    if len(conteudo) > limite:
-        flash("A imagem deve ter no máximo 5 MB.", "erro")
-        return redirect(url_for("dono.barbearia",
-                                barbearia_id=barbearia_id))
-
-    extensao = _extensao_de_imagem(conteudo)
-    if extensao is None:
-        flash("Formato inválido. Envie uma imagem JPG, PNG ou WebP.", "erro")
+    conteudo = arquivo.read(LIMITE_DE_FOTO + 1)
+    try:
+        extensao = container().validar_foto_da_barbearia.executar(conteudo)
+    except DadosInvalidos as erro:
+        flash(str(erro), "erro")
         return redirect(url_for("dono.barbearia",
                                 barbearia_id=barbearia_id))
 
@@ -113,31 +110,6 @@ def atualizar_foto(barbearia_id):
         container().fotos.remover(anterior.foto_principal)
 
     return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
-
-
-def _extensao_de_imagem(conteudo):
-    if (conteudo.startswith(b"\xff\xd8")
-            and conteudo.endswith(b"\xff\xd9")):
-        return ".jpg"
-    if conteudo.startswith(b"\x89PNG\r\n\x1a\n"):
-        if _png_valido(conteudo):
-            return ".png"
-    if (len(conteudo) >= 20 and conteudo[:4] == b"RIFF"
-            and conteudo[8:12] == b"WEBP"
-            and int.from_bytes(conteudo[4:8], "little") == len(conteudo) - 8):
-        return ".webp"
-    return None
-
-
-def _png_valido(conteudo):
-    if len(conteudo) < 33:
-        return False
-    tamanho = int.from_bytes(conteudo[8:12], "big")
-    if tamanho != 13 or conteudo[12:16] != b"IHDR":
-        return False
-    largura = int.from_bytes(conteudo[16:20], "big")
-    altura = int.from_bytes(conteudo[20:24], "big")
-    return largura > 0 and altura > 0 and b"IEND" in conteudo
 
 
 @bp.post("/barbearias/<barbearia_id>/cadeiras/<cadeira_id>/remover")
