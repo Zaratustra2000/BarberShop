@@ -53,6 +53,22 @@ CREATE TABLE IF NOT EXISTS servicos (
     preco_centavos INTEGER NOT NULL,
     duracao_minutos INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agendamentos (
+    id TEXT PRIMARY KEY,
+    cliente_id TEXT NOT NULL,
+    barbeiro_id TEXT NOT NULL,
+    servico_id TEXT NOT NULL,
+    servico_nome TEXT NOT NULL,
+    barbearia_id TEXT NOT NULL,
+    bloco_id TEXT NOT NULL,
+    inicio TEXT NOT NULL,
+    fim TEXT NOT NULL,
+    preco_centavos INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_agendamentos_barbeiro
+    ON agendamentos(barbeiro_id);
+CREATE INDEX IF NOT EXISTS ix_agendamentos_cliente
+    ON agendamentos(cliente_id);
 """
 
 

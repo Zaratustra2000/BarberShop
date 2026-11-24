@@ -1,6 +1,7 @@
 """Adapters SQLite das portas de repositório (veja docs/adr/0002)."""
 from datetime import datetime
 
+from domain.agendamento import Agendamento
 from domain.barbearia import (Barbearia, BlocoDeHorario, Cadeira,
                               HorarioOcioso)
 from domain.periodo import Periodo
@@ -33,6 +34,17 @@ class RepositorioDeUsuariosSQLite(RepositorioDeUsuarios):
 
     def por_email(self, email):
         return self._um("SELECT * FROM usuarios WHERE email = ?", email)
+
+    def barbeiros_por_nome(self, trecho):
+        # O filtro por trecho é feito em Python porque o LOWER do SQLite
+        # só converte letras ASCII (nomes como "Ítalo" falhariam).
+        with self._banco.conexao() as con:
+            linhas = con.execute(
+                "SELECT * FROM usuarios WHERE papel = ? ORDER BY nome, id",
+                (Papel.BARBEIRO.value,)).fetchall()
+        trecho = trecho.lower()
+        return [_usuario(linha) for linha in linhas
+                if trecho in linha["nome"].lower()]
 
     def _um(self, sql, *parametros):
         with self._banco.conexao() as con:
@@ -184,3 +196,34 @@ class RepositorioDeServicosSQLite(RepositorioDeServicos):
 class RepositorioDeAgendamentosSQLite(RepositorioDeAgendamentos):
     def __init__(self, banco):
         self._banco = banco
+
+    def salvar(self, agendamento):
+        a = agendamento
+        with self._banco.conexao() as con:
+            con.execute(
+                "INSERT OR REPLACE INTO agendamentos (id, cliente_id, "
+                "barbeiro_id, servico_id, servico_nome, barbearia_id, "
+                "bloco_id, inicio, fim, preco_centavos) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (a.id, a.cliente_id, a.barbeiro_id, a.servico_id,
+                 a.servico_nome, a.barbearia_id, a.bloco_id,
+                 _data(a.periodo.inicio), _data(a.periodo.fim),
+                 a.preco_centavos))
+
+    def do_barbeiro(self, barbeiro_id):
+        return self._consultar("barbeiro_id = ?", barbeiro_id)
+
+    def do_cliente(self, cliente_id):
+        return self._consultar("cliente_id = ?", cliente_id)
+
+    def _consultar(self, filtro, *parametros):
+        with self._banco.conexao() as con:
+            linhas = con.execute(
+                "SELECT * FROM agendamentos WHERE {} "
+                "ORDER BY inicio, id".format(filtro), parametros).fetchall()
+        return [Agendamento(
+            id=a["id"], cliente_id=a["cliente_id"],
+            barbeiro_id=a["barbeiro_id"], servico_id=a["servico_id"],
+            servico_nome=a["servico_nome"], barbearia_id=a["barbearia_id"],
+            bloco_id=a["bloco_id"], periodo=_periodo(a),
+            preco_centavos=a["preco_centavos"]) for a in linhas]

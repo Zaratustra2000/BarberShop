@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Optional
 
+from domain.agendamento import Agendamento
 from domain.barbearia import Barbearia
 from domain.servico import Servico
 from domain.usuario import Usuario
@@ -25,6 +26,10 @@ class RepositorioDeUsuarios(ABC):
     @abstractmethod
     def por_email(self, email: str) -> Optional[Usuario]:
         ...
+
+    @abstractmethod
+    def barbeiros_por_nome(self, trecho: str) -> List[Usuario]:
+        """Barbeiros cujo nome contém o trecho, sem diferenciar maiúsculas."""
 
 
 class RepositorioDeBarbearias(ABC):
@@ -66,7 +71,17 @@ class RepositorioDeServicos(ABC):
 
 
 class RepositorioDeAgendamentos(ABC):
-    pass
+    @abstractmethod
+    def salvar(self, agendamento: Agendamento) -> None:
+        ...
+
+    @abstractmethod
+    def do_barbeiro(self, barbeiro_id: str) -> List[Agendamento]:
+        """Agendamentos do barbeiro em ordem cronológica."""
+
+    @abstractmethod
+    def do_cliente(self, cliente_id: str) -> List[Agendamento]:
+        """Agendamentos do cliente em ordem cronológica."""
 
 
 class GeradorDeHashDeSenha(ABC):

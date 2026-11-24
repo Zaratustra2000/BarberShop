@@ -26,11 +26,11 @@ def test_agendamentos_por_barbeiro_e_por_cliente_em_ordem(repos):
 
 def test_barbeiros_por_nome_ignora_maiusculas_e_outras_personas(repos):
     usuarios = repos["usuarios"]
-    for nome, papel in (("Rafa Souza", Papel.BARBEIRO),
-                        ("Rafaela Lima", Papel.BARBEIRO),
-                        ("Rafael Dono", Papel.DONO),
-                        ("Bruno Costa", Papel.BARBEIRO)):
-        usuarios.salvar(Usuario(nome=nome, email=nome[:5] + "@exemplo.com",
+    for i, (nome, papel) in enumerate((("Rafa Souza", Papel.BARBEIRO),
+                                       ("Rafaela Lima", Papel.BARBEIRO),
+                                       ("Rafael Dono", Papel.DONO),
+                                       ("Bruno Costa", Papel.BARBEIRO))):
+        usuarios.salvar(Usuario(nome=nome, email="u{}@exemplo.com".format(i),
                                 senha_hash="h", papel=papel))
     assert [u.nome for u in usuarios.barbeiros_por_nome("RAFA")] == [
         "Rafa Souza", "Rafaela Lima"]

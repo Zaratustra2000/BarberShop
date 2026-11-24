@@ -12,6 +12,11 @@
       · aluguel {{ item.bloco.valor_centavos|reais }}
       <br><small>{{ item.barbearia.endereco }} · {{ item.barbearia.bairro }}</small>
     </header>
+    {% for a in item.agendamentos %}
+      <p>{{ a.periodo.inicio|hora }}–{{ a.periodo.fim|hora }} · <strong>{{ nomes[a.cliente_id] }}</strong> · {{ a.servico_nome }} · {{ a.preco_centavos|reais }}</p>
+    {% else %}
+      <p><small>Nenhum agendamento neste bloco ainda.</small></p>
+    {% endfor %}
   </article>
 {% else %}
   <p>Você ainda não reservou nenhum bloco de horário.</p>

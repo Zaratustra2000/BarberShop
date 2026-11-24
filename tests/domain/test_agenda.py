@@ -37,8 +37,8 @@ def test_horarios_disponiveis_em_passos_de_30_min_que_cabem_no_bloco():
 def test_horarios_disponiveis_descontam_agendamentos():
     agenda = agenda_com_bloco()
     agenda.agendar("cliente", CORTE, hora(14, 30))
-    inicios = [h.inicio for h in agenda.horarios_disponiveis(CORTE,
-                                                              hora(8))]
+    inicios = [h.inicio for h in
+               agenda.horarios_disponiveis(CORTE, hora(8))]
     assert inicios == [hora(15, 10), hora(15, 20)]
 
 

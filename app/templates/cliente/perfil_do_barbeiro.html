@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}{{ perfil.barbeiro.nome }}{% endblock %}
+{% block head %}{% include "_leaflet.html" %}{% endblock %}
+{% block conteudo %}
+<h2>✂️ {{ perfil.barbeiro.nome }}</h2>
+
+<h3>Onde vai atender</h3>
+{% if perfil.proximos_locais %}
+  <div class="mapa" data-mapa-marcadores='{{ marcadores|tojson }}'></div>
+  <ul>
+  {% for item in perfil.proximos_locais %}
+    <li><strong>{{ item.barbearia.nome }}</strong> ({{ item.barbearia.endereco }}): {{ item.bloco.periodo.inicio|data_hora }} às {{ item.bloco.periodo.fim|hora }}</li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <p>Este barbeiro ainda não tem horários em nenhuma barbearia.</p>
+{% endif %}
+
+<h3>Serviços</h3>
+<div class="grid">
+{% for s in perfil.servicos %}
+  <a href="/cliente/barbeiros/{{ perfil.barbeiro.id }}?servico_id={{ s.id }}" role="button"
+     class="{% if not perfil.servico_escolhido or perfil.servico_escolhido.id != s.id %}outline{% endif %}">
+    {{ s.nome }} · {{ s.preco_centavos|reais }} · {{ s.duracao_minutos }} min
+  </a>
+{% else %}
+  <p>Nenhum serviço cadastrado.</p>
+{% endfor %}
+</div>
+
+{% if perfil.servico_escolhido %}
+  <h3>Horários para {{ perfil.servico_escolhido.nome }}</h3>
+  {% for h in perfil.horarios %}
+    <form method="post" action="{{ url_for('cliente.agendar') }}" class="inline">
+      <input type="hidden" name="servico_id" value="{{ perfil.servico_escolhido.id }}">
+      <input type="hidden" name="inicio" value="{{ h.inicio.strftime('%Y-%m-%dT%H:%M') }}">
+      <button type="submit" class="outline" title="{{ h.barbearia.nome }}">{{ h.inicio.strftime('%d/%m') }} {{ h.inicio|hora }}</button>
+    </form>
+  {% else %}
+    <p>Sem horários livres para este serviço.</p>
+  {% endfor %}
+{% endif %}
+{% endblock %}

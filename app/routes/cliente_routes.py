@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template
+"""Controllers do cliente (US5)."""
+from flask import Blueprint, redirect, render_template, request, url_for
 
-from app.routes.sessao import requer_papel
+from app.formatos import ler_data_hora
+from app.routes.sessao import container, requer_papel, usuario_id
 
 bp = Blueprint("cliente", __name__, url_prefix="/cliente")
 
@@ -8,4 +10,34 @@ bp = Blueprint("cliente", __name__, url_prefix="/cliente")
 @bp.get("")
 @requer_papel("cliente")
 def painel():
-    return render_template("cliente/painel.html")
+    c = container()
+    nome = request.args.get("nome", "").strip()
+    return render_template(
+        "cliente/painel.html", nome=nome,
+        barbeiros=c.buscar_barbeiros.executar(nome) if nome else [],
+        agendamentos=c.consultar_agendamentos_do_cliente.executar(
+            usuario_id()))
+
+
+@bp.get("/barbeiros/<barbeiro_id>")
+@requer_papel("cliente")
+def perfil_do_barbeiro(barbeiro_id):
+    perfil = container().consultar_perfil_do_barbeiro.executar(
+        barbeiro_id, request.args.get("servico_id"))
+    locais = {i.barbearia.id: dict(lat=i.barbearia.latitude,
+                                   lng=i.barbearia.longitude,
+                                   titulo=i.barbearia.nome,
+                                   detalhe=i.barbearia.endereco)
+              for i in perfil.proximos_locais}
+    return render_template("cliente/perfil_do_barbeiro.html", perfil=perfil,
+                           marcadores=list(locais.values()))
+
+
+@bp.post("/agendamentos")
+@requer_papel("cliente")
+def agendar():
+    container().agendar_atendimento.executar(
+        cliente_id=usuario_id(),
+        servico_id=request.form.get("servico_id", ""),
+        inicio=ler_data_hora(request.form.get("inicio")))
+    return redirect(url_for("cliente.painel"))

@@ -5,6 +5,7 @@ para que um teste nunca passe por compartilhar o mesmo objeto por engano.
 """
 from copy import deepcopy
 
+from domain.usuario import Papel
 from use_cases.portas import (
     RepositorioDeAgendamentos,
     RepositorioDeBarbearias,
@@ -28,6 +29,13 @@ class RepositorioDeUsuariosEmMemoria(RepositorioDeUsuarios):
             if usuario.email == email:
                 return deepcopy(usuario)
         return None
+
+    def barbeiros_por_nome(self, trecho):
+        trecho = trecho.lower()
+        achados = [u for u in self._dados.values()
+                   if u.papel == Papel.BARBEIRO and trecho in u.nome.lower()]
+        return [deepcopy(u) for u in sorted(achados,
+                                            key=lambda u: (u.nome, u.id))]
 
 
 class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
@@ -74,3 +82,17 @@ class RepositorioDeServicosEmMemoria(RepositorioDeServicos):
 class RepositorioDeAgendamentosEmMemoria(RepositorioDeAgendamentos):
     def __init__(self):
         self._dados = {}
+
+    def salvar(self, agendamento):
+        self._dados[agendamento.id] = deepcopy(agendamento)
+
+    def do_barbeiro(self, barbeiro_id):
+        return self._filtrar(lambda a: a.barbeiro_id == barbeiro_id)
+
+    def do_cliente(self, cliente_id):
+        return self._filtrar(lambda a: a.cliente_id == cliente_id)
+
+    def _filtrar(self, criterio):
+        achados = [a for a in self._dados.values() if criterio(a)]
+        return [deepcopy(a) for a in
+                sorted(achados, key=lambda a: (a.periodo.inicio, a.id))]

@@ -1,5 +1,37 @@
 {% extends "base.html" %}
 {% block titulo %}Meus agendamentos{% endblock %}
 {% block conteudo %}
+<h2>Encontre seu barbeiro de confiança</h2>
+<form method="get" role="search">
+  <input name="nome" value="{{ nome }}" placeholder="Nome do barbeiro" required>
+  <button type="submit">Buscar</button>
+</form>
+{% if nome %}
+  <ul>
+  {% for b in barbeiros %}
+    <li><a href="/cliente/barbeiros/{{ b.id }}">{{ b.nome }}</a></li>
+  {% else %}
+    <li>Nenhum barbeiro com “{{ nome }}” no nome.</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
 <h2>Meus agendamentos</h2>
+<table>
+  <thead><tr><th>Quando</th><th>Serviço</th><th>Barbeiro</th><th>Onde</th><th>Valor</th></tr></thead>
+  <tbody>
+  {% for item in agendamentos %}
+    <tr>
+      <td>{{ item.agendamento.periodo.inicio|data_hora }}</td>
+      <td>{{ item.agendamento.servico_nome }}</td>
+      <td>{{ item.barbeiro_nome }}</td>
+      <td>{% if item.barbearia %}{{ item.barbearia.nome }}<br><small>{{ item.barbearia.endereco }}</small>{% endif %}</td>
+      <td>{{ item.agendamento.preco_centavos|reais }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">Você ainda não tem agendamentos.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p><small>Pagamento presencial, direto na barbearia.</small></p>
 {% endblock %}

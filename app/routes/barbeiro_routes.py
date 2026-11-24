@@ -11,10 +11,11 @@ bp = Blueprint("barbeiro", __name__, url_prefix="/barbeiro")
 @requer_papel("barbeiro")
 def painel():
     c = container()
+    visao = c.consultar_agenda_do_barbeiro.executar(usuario_id())
     return render_template(
         "barbeiro/painel.html",
         servicos=c.consultar_servicos_do_barbeiro.executar(usuario_id()),
-        agenda=c.consultar_agenda_do_barbeiro.executar(usuario_id()))
+        agenda=visao.agenda.itens, nomes=visao.nomes_dos_clientes)
 
 
 @bp.post("/servicos")
