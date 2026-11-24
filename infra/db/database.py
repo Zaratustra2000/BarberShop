@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS agendamentos (
     bloco_id TEXT NOT NULL,
     inicio TEXT NOT NULL,
     fim TEXT NOT NULL,
-    preco_centavos INTEGER NOT NULL
+    preco_centavos INTEGER NOT NULL,
+    cancelado INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS ix_agendamentos_barbeiro
     ON agendamentos(barbeiro_id);
@@ -127,3 +128,11 @@ class BancoSQLite:
                 con.execute(
                     "ALTER TABLE usuarios "
                     "ADD COLUMN foto_perfil TEXT NOT NULL DEFAULT ''")
+            colunas = {
+                coluna["name"]
+                for coluna in con.execute("PRAGMA table_info(agendamentos)")
+            }
+            if "cancelado" not in colunas:
+                con.execute(
+                    "ALTER TABLE agendamentos "
+                    "ADD COLUMN cancelado INTEGER NOT NULL DEFAULT 0")

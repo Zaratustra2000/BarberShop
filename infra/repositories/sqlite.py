@@ -284,12 +284,19 @@ class RepositorioDeAgendamentosSQLite(RepositorioDeAgendamentos):
             con.execute(
                 "INSERT OR REPLACE INTO agendamentos (id, cliente_id, "
                 "barbeiro_id, servico_id, servico_nome, barbearia_id, "
-                "bloco_id, inicio, fim, preco_centavos) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "bloco_id, inicio, fim, preco_centavos, cancelado) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (a.id, a.cliente_id, a.barbeiro_id, a.servico_id,
                  a.servico_nome, a.barbearia_id, a.bloco_id,
                  _data(a.periodo.inicio), _data(a.periodo.fim),
-                 a.preco_centavos))
+                 a.preco_centavos, int(a.cancelado)))
+
+    def por_id(self, agendamento_id):
+        with self._banco.conexao() as con:
+            linha = con.execute(
+                "SELECT * FROM agendamentos WHERE id = ?",
+                (agendamento_id,)).fetchone()
+        return self._agendamento(linha) if linha else None
 
     def do_barbeiro(self, barbeiro_id):
         return self._consultar("barbeiro_id = ?", barbeiro_id)
@@ -302,9 +309,13 @@ class RepositorioDeAgendamentosSQLite(RepositorioDeAgendamentos):
             linhas = con.execute(
                 "SELECT * FROM agendamentos WHERE {} "
                 "ORDER BY inicio, id".format(filtro), parametros).fetchall()
-        return [Agendamento(
+        return [self._agendamento(a) for a in linhas]
+
+    def _agendamento(self, a):
+        return Agendamento(
             id=a["id"], cliente_id=a["cliente_id"],
             barbeiro_id=a["barbeiro_id"], servico_id=a["servico_id"],
             servico_nome=a["servico_nome"], barbearia_id=a["barbearia_id"],
             bloco_id=a["bloco_id"], periodo=_periodo(a),
-            preco_centavos=a["preco_centavos"]) for a in linhas]
+            preco_centavos=a["preco_centavos"],
+            cancelado=bool(a["cancelado"]))

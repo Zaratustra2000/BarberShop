@@ -93,6 +93,10 @@ class RepositorioDeAgendamentosEmMemoria(RepositorioDeAgendamentos):
     def salvar(self, agendamento):
         self._dados[agendamento.id] = deepcopy(agendamento)
 
+    def por_id(self, agendamento_id):
+        agendamento = self._dados.get(agendamento_id)
+        return deepcopy(agendamento) if agendamento else None
+
     def do_barbeiro(self, barbeiro_id):
         return self._filtrar(lambda a: a.barbeiro_id == barbeiro_id)
 

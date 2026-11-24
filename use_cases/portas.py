@@ -86,6 +86,10 @@ class RepositorioDeAgendamentos(ABC):
         ...
 
     @abstractmethod
+    def por_id(self, agendamento_id: str) -> Optional[Agendamento]:
+        ...
+
+    @abstractmethod
     def do_barbeiro(self, barbeiro_id: str) -> List[Agendamento]:
         """Agendamentos do barbeiro em ordem cronológica."""
 
