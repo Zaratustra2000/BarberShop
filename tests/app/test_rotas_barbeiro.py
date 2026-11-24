@@ -109,3 +109,38 @@ def test_barbeiro_envia_foto_do_perfil(client):
         follow_redirects=True).get_data(as_text=True)
 
     assert "/fotos/" in pagina
+
+
+def test_barbeiro_cancela_agendamento_e_cliente_ve_estado(client):
+    from tests.app.test_rotas_cliente import barbeiro_pronto_para_atender
+    from tests.app.conftest import cadastrar_e_entrar
+    from tests.app.fluxo import sair
+
+    barbeiro_pronto_para_atender(client)
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+    pagina = client.get("/cliente").get_data(as_text=True)
+    perfil = extrair(r'href="(/cliente/barbeiros/\w+)"', pagina)
+    pagina = client.get(perfil).get_data(as_text=True)
+    servico_id = extrair(r'servico_id=(\w+)"', pagina)
+    client.post("/cliente/agendamentos", data=dict(
+        servico_id=servico_id, inicio="2030-01-07T14:30"))
+
+    with client.application.app_context():
+        container = client.application.extensions["barbershop"]
+        cliente = container.usuarios.por_email("cliente@exemplo.com")
+        agendamento = container.consultar_agendamentos_do_cliente.executar(
+            cliente.id)[0].agendamento
+        agendamento_id = agendamento.id
+
+    sair(client)
+    client.post("/login", data=dict(email="barbeiro@exemplo.com",
+                                    senha="segredo1"))
+    pagina = client.post(
+        "/barbeiro/agendamentos/{}/cancelar".format(agendamento_id),
+        follow_redirects=True).get_data(as_text=True)
+    assert "Cancelado" in pagina
+
+    sair(client)
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+    pagina = client.get("/cliente").get_data(as_text=True)
+    assert "Cancelado" in pagina
