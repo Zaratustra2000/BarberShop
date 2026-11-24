@@ -25,6 +25,7 @@ def test_cliente_acha_o_barbeiro_e_agenda(client):
     perfil = extrair(r'href="(/cliente/barbeiros/\w+)"', pagina)
     pagina = client.get(perfil).get_data(as_text=True)
     assert "Barbearia Exemplo" in pagina
+    assert 'data-mapa-marcadores=' in pagina
 
     servico_id = extrair(r'servico_id=(\w+)"', pagina)
     pagina = client.get(perfil + "?servico_id=" + servico_id).get_data(

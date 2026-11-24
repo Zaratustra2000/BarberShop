@@ -35,14 +35,23 @@ def test_regra_violada_volta_com_mensagem(client):
     assert "Informe o nome" in pagina
 
 
-def test_mapa_da_nova_barbearia_usa_tiles_oficiais_e_atribuicao(client):
+def test_mapa_da_nova_barbearia_usa_mapa_municipal_offline(client):
     cadastrar_e_entrar(client, "dono")
 
     pagina = client.get("/dono/barbearias/nova").get_data(as_text=True)
     script = client.get("/static/mapa.js").get_data(as_text=True)
 
     assert 'data-mapa-seletor' in pagina
-    assert 'https://tile.openstreetmap.org/{z}/{x}/{y}.png' in script
-    assert '{s}.tile.openstreetmap.org' not in script
+    assert '/static/basemap/rio-de-janeiro/{z}/{x}/{y}.png' in script
+    assert 'tile.openstreetmap.org' not in script
     assert 'https://www.openstreetmap.org/copyright' in script
+    assert 'https://opendatacommons.org/licenses/odbl/' in script
+    assert 'maxBounds' in script
+    assert 'maxZoom: 16' in script
+    assert 'minZoom: 10' in script
+    assert 'fitBounds(limites' in script
+    assert 'lat.value = e.latlng.lat.toFixed(6)' in script
+    assert 'lng.value = e.latlng.lng.toFixed(6)' in script
+    assert 'marcador.setLatLng(e.latlng)' in script
+    assert 'm.bindPopup(caixa)' in script
     assert 'chave' not in script.lower()

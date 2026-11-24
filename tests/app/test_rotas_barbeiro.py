@@ -21,6 +21,7 @@ def test_barbeiro_busca_por_bairro_e_reserva_bloco(client):
         as_text=True)
     assert "Barbearia Exemplo" in pagina
     assert "13:00 às 18:00" in pagina
+    assert 'data-mapa-marcadores=' in pagina
 
     barbearia_id = extrair(r'name="barbearia_id" value="(\w+)"', pagina)
     horario_id = extrair(r'name="horario_ocioso_id" value="(\w+)"', pagina)
