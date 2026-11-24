@@ -14,10 +14,18 @@ bp = Blueprint("barbeiro", __name__, url_prefix="/barbeiro")
 def painel():
     c = container()
     visao = c.consultar_agenda_do_barbeiro.executar(usuario_id())
+    cancelaveis = {
+        agendamento.id
+        for item in visao.agenda.itens
+        for agendamento in item.agendamentos
+        if not agendamento.cancelado
+        and agendamento.periodo.inicio > c.relogio.agora()
+    }
     return render_template(
         "barbeiro/painel.html",
         servicos=c.consultar_servicos_do_barbeiro.executar(usuario_id()),
-        agenda=visao.agenda.itens, nomes=visao.nomes_dos_clientes)
+        agenda=visao.agenda.itens, nomes=visao.nomes_dos_clientes,
+        cancelaveis=cancelaveis)
 
 
 @bp.get("/perfil")

@@ -18,7 +18,7 @@
         {{ a.periodo.inicio|hora }}–{{ a.periodo.fim|hora }} · <strong>{{ nomes[a.cliente_id] }}</strong> · {{ a.servico_nome }} · {{ a.preco_centavos|reais }}
         {% if a.cancelado %}
           · <strong>Cancelado</strong>
-        {% else %}
+        {% elif a.id in cancelaveis %}
           <form method="post" action="{{ url_for('barbeiro.cancelar_agendamento', agendamento_id=a.id) }}" style="display:inline">
             <button type="submit" class="secondary outline">Cancelar</button>
           </form>
