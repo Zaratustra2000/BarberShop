@@ -83,6 +83,91 @@ def test_dono_edita_e_exclui_horario_ocioso_sem_blocos(client):
     assert "Nenhum horário ocioso publicado." in pagina
 
 
+def test_edicao_invalida_volta_com_mensagem_na_rota(client):
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    pagina = client.get("/dono").get_data(as_text=True)
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
+    pagina_barbearia = client.get(
+        "/dono/barbearias/{}".format(barbearia_id)).get_data(as_text=True)
+    cadeira_id = extrair(r'<option value="(\w+)">Cadeira 1', pagina_barbearia)
+    client.post("/dono/barbearias/{}/horarios".format(barbearia_id),
+                data=dict(cadeira_id=cadeira_id,
+                          inicio="2030-01-07T13:00",
+                          fim="2030-01-07T18:00",
+                          preco_por_hora="30,00"))
+    pagina_barbearia = client.get(
+        "/dono/barbearias/{}".format(barbearia_id)).get_data(as_text=True)
+    horario_id = extrair(
+        r'/dono/barbearias/{}/horarios/(\w+)/editar'.format(barbearia_id),
+        pagina_barbearia)
+
+    pagina = client.post(
+        "/dono/barbearias/{}/horarios/{}/editar".format(
+            barbearia_id, horario_id),
+        data=dict(cadeira_id=cadeira_id, inicio="2030-01-07T18:00",
+                  fim="2030-01-07T13:00", preco_por_hora="30,00"),
+        headers={"Referer": "/dono/barbearias/{}".format(barbearia_id)},
+        follow_redirects=True).get_data(as_text=True)
+    assert "O fim precisa ser depois do início." in pagina
+
+
+def test_outro_dono_nao_edita_horario_pela_rota(client):
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    pagina = client.get("/dono").get_data(as_text=True)
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
+    pagina_barbearia = client.get(
+        "/dono/barbearias/{}".format(barbearia_id)).get_data(as_text=True)
+    cadeira_id = extrair(r'<option value="(\w+)">Cadeira 1', pagina_barbearia)
+    client.post("/dono/barbearias/{}/horarios".format(barbearia_id),
+                data=dict(cadeira_id=cadeira_id,
+                          inicio="2030-01-07T13:00",
+                          fim="2030-01-07T18:00",
+                          preco_por_hora="30,00"))
+    pagina_barbearia = client.get(
+        "/dono/barbearias/{}".format(barbearia_id)).get_data(as_text=True)
+    horario_id = extrair(
+        r'/dono/barbearias/{}/horarios/(\w+)/editar'.format(barbearia_id),
+        pagina_barbearia)
+
+    client.post("/logout")
+    cadastrar_e_entrar(client, "dono", email="intruso@exemplo.com")
+    resposta = client.post(
+        "/dono/barbearias/{}/horarios/{}/editar".format(
+            barbearia_id, horario_id),
+        data=dict(cadeira_id=cadeira_id, inicio="2030-01-07T14:00",
+                  fim="2030-01-07T17:00", preco_por_hora="45,00"))
+    assert resposta.status_code == 403
+
+
+def test_exclusao_com_bloco_volta_com_mensagem_na_rota(client):
+    from tests.app.fluxo import dono_publica_horario
+
+    dono_publica_horario(client)
+    cadastrar_e_entrar(client, "barbeiro")
+    pagina = client.get("/barbeiro/busca?bairro=botafogo").get_data(
+        as_text=True)
+    barbearia_id = extrair(r'name="barbearia_id" value="(\w+)"', pagina)
+    horario_id = extrair(r'name="horario_ocioso_id" value="(\w+)"', pagina)
+    client.post("/barbeiro/blocos",
+                data=dict(barbearia_id=barbearia_id,
+                          horario_ocioso_id=horario_id,
+                          inicio="2030-01-07T14:00",
+                          fim="2030-01-07T16:00"))
+
+    client.post("/logout")
+    cadastrar_e_entrar(client, "dono")
+    pagina = client.get(
+        "/dono/barbearias/{}".format(barbearia_id)).get_data(as_text=True)
+    pagina = client.post(
+        "/dono/barbearias/{}/horarios/{}/excluir".format(
+            barbearia_id, horario_id),
+        headers={"Referer": "/dono/barbearias/{}".format(barbearia_id)},
+        follow_redirects=True).get_data(as_text=True)
+    assert "Não é possível excluir um horário ocioso com blocos." in pagina
+
+
 def test_regra_violada_volta_com_mensagem(client):
     cadastrar_e_entrar(client, "dono")
     pagina = client.post("/dono/barbearias", data=dict(
