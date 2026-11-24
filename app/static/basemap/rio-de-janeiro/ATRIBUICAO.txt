@@ -1,0 +1,7 @@
+Basemap municipal do Rio de Janeiro
+
+Dados derivados de OpenStreetMap (c) colaboradores OpenStreetMap.
+https://www.openstreetmap.org/copyright
+
+Licenca ODbL (Open Data Commons Open Database License).
+https://opendatacommons.org/licenses/odbl/
