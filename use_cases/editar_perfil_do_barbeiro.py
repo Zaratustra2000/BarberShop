@@ -8,9 +8,7 @@ class EditarPerfilDoBarbeiro:
         self._usuarios = usuarios
 
     def executar(self, barbeiro_id: str, nome: str,
-                 apresentacao: str = "", breve_apresentacao: str = None):
-        if breve_apresentacao is not None:
-            apresentacao = breve_apresentacao
+                 apresentacao: str = ""):
         barbeiro = exigir_usuario(
             self._usuarios, barbeiro_id, Papel.BARBEIRO)
         barbeiro.editar_perfil_do_barbeiro(nome, apresentacao)

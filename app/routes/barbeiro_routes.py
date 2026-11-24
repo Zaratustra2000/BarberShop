@@ -23,7 +23,8 @@ def painel():
 @bp.get("/perfil")
 @requer_papel("barbeiro")
 def perfil():
-    barbeiro = container().usuarios.por_id(usuario_id())
+    barbeiro = container().consultar_perfil_do_barbeiro.executar(
+        usuario_id()).barbeiro
     return render_template("barbeiro/perfil.html", barbeiro=barbeiro)
 
 
