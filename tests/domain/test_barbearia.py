@@ -35,6 +35,40 @@ def test_cadeiras_sao_numeradas_na_ordem():
     assert [c.nome for c in b.cadeiras] == ["Cadeira 1", "Cadeira 2"]
 
 
+def test_perfil_da_barbearia_pode_ser_editado():
+    b = barbearia()
+    b.editar(nome="Nova Barbershop", endereco="Rua Nova, 20",
+             bairro="Copacabana", latitude=-22.967, longitude=-43.178,
+             regras="Sem atrasos.")
+    assert (b.nome, b.endereco, b.bairro, b.latitude, b.longitude,
+            b.regras) == ("Nova Barbershop", "Rua Nova, 20", "Copacabana",
+                          -22.967, -43.178, "Sem atrasos.")
+
+
+def test_cadeira_sem_referencias_pode_ser_removida():
+    b = barbearia()
+    cadeira = b.adicionar_cadeira()
+    b.remover_cadeira(cadeira.id)
+    assert b.cadeiras == []
+
+
+def test_cadeira_com_horario_ocioso_nao_pode_ser_removida():
+    b = barbearia()
+    cadeira = b.adicionar_cadeira()
+    b.publicar_horario_ocioso(
+        cadeira.id, Periodo(hora(13), hora(18)), 3000)
+    with pytest.raises(ConflitoDeHorario):
+        b.remover_cadeira(cadeira.id)
+
+
+def test_cadeira_com_bloco_nao_pode_ser_removida():
+    b, horario = com_horario_ocioso()
+    b.reservar_bloco(horario.id, "rafa",
+                     Periodo(hora(14), hora(15)))
+    with pytest.raises(ConflitoDeHorario):
+        b.remover_cadeira(horario.cadeira_id)
+
+
 def test_publicar_horario_ocioso_em_cadeira_da_barbearia():
     b = barbearia()
     cadeira = b.adicionar_cadeira()

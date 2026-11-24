@@ -19,6 +19,8 @@ from use_cases.consultar_agenda_do_barbeiro import ConsultarAgendaDoBarbeiro
 from use_cases.consultar_agendamentos_do_cliente import (
     ConsultarAgendamentosDoCliente)
 from use_cases.consultar_perfil_do_barbeiro import ConsultarPerfilDoBarbeiro
+from use_cases.consultar_perfil_da_barbearia import ConsultarPerfilDaBarbearia
+from use_cases.editar_perfil_da_barbearia import EditarPerfilDaBarbearia
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
 from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
 
@@ -38,6 +40,10 @@ class Container:
         self.usuarios = usuarios
         self.cadastrar_barbearia = CadastrarBarbearia(usuarios, barbearias)
         self.consultar_barbearias_do_dono = ConsultarBarbeariasDoDono(
+            barbearias)
+        self.editar_perfil_da_barbearia = EditarPerfilDaBarbearia(
+            usuarios, barbearias)
+        self.consultar_perfil_da_barbearia = ConsultarPerfilDaBarbearia(
             barbearias)
         self.publicar_horario_ocioso = PublicarHorarioOcioso(
             barbearias, self.relogio)

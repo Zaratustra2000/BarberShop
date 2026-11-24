@@ -41,3 +41,29 @@ def test_barbearias_do_dono(repos):
 
 def test_barbearia_inexistente_devolve_none(repos):
     assert repos["barbearias"].por_id("nao-existe") is None
+
+
+def test_editar_barbearia_preserva_horarios(repos):
+    barbearias = repos["barbearias"]
+    b = nova_barbearia()
+    barbearias.salvar(b)
+    b.editar(nome="Barbearia Atualizada", endereco="Rua Nova, 10",
+             bairro="Copacabana", latitude=-22.967, longitude=-43.178,
+             regras="Som baixo.")
+    barbearias.salvar(b)
+    salva = barbearias.por_id(b.id)
+    assert salva.nome == "Barbearia Atualizada"
+    assert salva.endereco == "Rua Nova, 10"
+    assert len(salva.horarios_ociosos) == 1
+    assert len(salva.cadeiras) == 1
+
+
+def test_remover_cadeira_sem_referencias(repos):
+    barbearias = repos["barbearias"]
+    b = nova_barbearia()
+    segunda = b.adicionar_cadeira()
+    barbearias.salvar(b)
+    b.remover_cadeira(segunda.id)
+    barbearias.salvar(b)
+    salva = barbearias.por_id(b.id)
+    assert [c.nome for c in salva.cadeiras] == ["Cadeira 1"]

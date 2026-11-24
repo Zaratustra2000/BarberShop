@@ -55,3 +55,11 @@ def reservar_bloco():
         inicio=ler_data_hora(form.get("inicio")),
         fim=ler_data_hora(form.get("fim")))
     return redirect(url_for("barbeiro.painel"))
+
+
+@bp.get("/barbearias/<barbearia_id>")
+@requer_papel("barbeiro")
+def perfil_da_barbearia(barbearia_id):
+    barbearia = container().consultar_perfil_da_barbearia.executar(
+        barbearia_id)
+    return render_template("barbearia/perfil.html", barbearia=barbearia)

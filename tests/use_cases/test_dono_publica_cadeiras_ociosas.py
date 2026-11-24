@@ -6,6 +6,7 @@ import pytest
 from domain.erros import AcessoNegado, DadosInvalidos
 from use_cases.cadastrar_barbearia import CadastrarBarbearia
 from use_cases.consultar_barbearias_do_dono import ConsultarBarbeariasDoDono
+from use_cases.editar_perfil_da_barbearia import EditarPerfilDaBarbearia
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
 
 
@@ -79,3 +80,41 @@ def test_horario_ocioso_no_passado_e_recusado(ctx):
     with pytest.raises(DadosInvalidos):
         publicar(ctx, dono, barbearia,
                  datetime(2030, 1, 5, 13), datetime(2030, 1, 5, 18))
+
+
+def test_dono_edita_perfil_e_cadeiras_ficam_persistidas(ctx):
+    dono = ctx.cadastrar("dono")
+    barbearia = cadastrar_barbearia(ctx, dono, cadeiras=1)
+    EditarPerfilDaBarbearia(ctx.usuarios, ctx.barbearias).executar(
+        dono_id=dono.id, barbearia_id=barbearia.id,
+        nome="Nova Barbershop", endereco="Rua Nova, 20",
+        bairro="Copacabana", latitude=-22.967, longitude=-43.178,
+        regras="Sem atrasos.", quantidade_de_cadeiras=3)
+    salva = ctx.barbearias.por_id(barbearia.id)
+    assert (salva.nome, salva.endereco, salva.bairro, salva.regras) == (
+        "Nova Barbershop", "Rua Nova, 20", "Copacabana", "Sem atrasos.")
+    assert [c.nome for c in salva.cadeiras] == [
+        "Cadeira 1", "Cadeira 2", "Cadeira 3"]
+
+
+def test_outro_dono_nao_edita_perfil(ctx):
+    dono = ctx.cadastrar("dono", email="dono@exemplo.com")
+    intruso = ctx.cadastrar("dono", email="intruso@exemplo.com")
+    barbearia = cadastrar_barbearia(ctx, dono)
+    with pytest.raises(AcessoNegado):
+        EditarPerfilDaBarbearia(ctx.usuarios, ctx.barbearias).executar(
+            dono_id=intruso.id, barbearia_id=barbearia.id,
+            nome="Nome falso", endereco="Rua Falsa, 1", bairro="Centro",
+            latitude=-22.9, longitude=-43.2, regras="",
+            quantidade_de_cadeiras=1)
+
+
+def test_dono_remove_cadeira_sem_referencias(ctx):
+    dono = ctx.cadastrar("dono")
+    barbearia = cadastrar_barbearia(ctx, dono, cadeiras=2)
+    cadeira = barbearia.cadeiras[1]
+    EditarPerfilDaBarbearia(ctx.usuarios, ctx.barbearias).remover_cadeira(
+        dono_id=dono.id, barbearia_id=barbearia.id,
+        cadeira_id=cadeira.id)
+    salva = ctx.barbearias.por_id(barbearia.id)
+    assert [c.nome for c in salva.cadeiras] == ["Cadeira 1"]

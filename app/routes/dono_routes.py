@@ -60,3 +60,28 @@ def publicar_horario(barbearia_id):
         preco_por_hora_centavos=reais_para_centavos(
             form.get("preco_por_hora", "")))
     return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
+
+
+@bp.post("/barbearias/<barbearia_id>/perfil")
+@requer_papel("dono")
+def editar_perfil(barbearia_id):
+    form = request.form
+    barbearia = container().editar_perfil_da_barbearia.executar(
+        dono_id=usuario_id(), barbearia_id=barbearia_id,
+        nome=form.get("nome", ""), endereco=form.get("endereco", ""),
+        bairro=form.get("bairro", ""),
+        latitude=ler_decimal(form.get("latitude"), "latitude"),
+        longitude=ler_decimal(form.get("longitude"), "longitude"),
+        regras=form.get("regras", ""),
+        quantidade_de_cadeiras=ler_inteiro(
+            form.get("quantidade_de_cadeiras"), "quantidade de cadeiras"))
+    return redirect(url_for("dono.barbearia", barbearia_id=barbearia.id))
+
+
+@bp.post("/barbearias/<barbearia_id>/cadeiras/<cadeira_id>/remover")
+@requer_papel("dono")
+def remover_cadeira(barbearia_id, cadeira_id):
+    container().editar_perfil_da_barbearia.remover_cadeira(
+        dono_id=usuario_id(), barbearia_id=barbearia_id,
+        cadeira_id=cadeira_id)
+    return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))

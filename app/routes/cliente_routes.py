@@ -41,3 +41,11 @@ def agendar():
         servico_id=request.form.get("servico_id", ""),
         inicio=ler_data_hora(request.form.get("inicio")))
     return redirect(url_for("cliente.painel"))
+
+
+@bp.get("/barbearias/<barbearia_id>")
+@requer_papel("cliente")
+def perfil_da_barbearia(barbearia_id):
+    barbearia = container().consultar_perfil_da_barbearia.executar(
+        barbearia_id)
+    return render_template("barbearia/perfil.html", barbearia=barbearia)

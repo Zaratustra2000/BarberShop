@@ -1,12 +1,46 @@
 {% extends "base.html" %}
 {% block titulo %}{{ barbearia.nome }}{% endblock %}
+{% block head %}{% include "_leaflet.html" %}{% endblock %}
 {% block conteudo %}
 <hgroup>
   <h2>{{ barbearia.nome }}</h2>
   <p>{{ barbearia.endereco }} · {{ barbearia.bairro }}</p>
 </hgroup>
 {% if barbearia.regras %}<p><strong>Regras da casa:</strong> {{ barbearia.regras }}</p>{% endif %}
-<p><strong>Cadeiras:</strong> {% for c in barbearia.cadeiras %}{{ c.nome }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+<p><strong>Cadeiras:</strong></p>
+<ul>
+  {% for c in barbearia.cadeiras %}
+  <li>
+    {{ c.nome }}
+    <form method="post" action="{{ url_for('dono.remover_cadeira', barbearia_id=barbearia.id, cadeira_id=c.id) }}" class="inline">
+      <button type="submit" class="secondary outline">Remover</button>
+    </form>
+  </li>
+  {% else %}
+  <li>Nenhuma cadeira.</li>
+  {% endfor %}
+</ul>
+
+<article>
+  <h3>Editar perfil</h3>
+  <form method="post" action="{{ url_for('dono.editar_perfil', barbearia_id=barbearia.id) }}">
+    <div class="grid">
+      <label>Nome <input name="nome" value="{{ barbearia.nome }}" required></label>
+      <label>Bairro <input name="bairro" value="{{ barbearia.bairro }}" required></label>
+    </div>
+    <label>Endereço <input name="endereco" value="{{ barbearia.endereco }}" required></label>
+    <label>Localização: clique no mapa
+      <div class="mapa" data-mapa-seletor data-lat="#latitude" data-lng="#longitude"></div>
+    </label>
+    <div class="grid">
+      <label>Latitude <input id="latitude" name="latitude" value="{{ barbearia.latitude }}" required readonly></label>
+      <label>Longitude <input id="longitude" name="longitude" value="{{ barbearia.longitude }}" required readonly></label>
+      <label>Cadeiras <input name="quantidade_de_cadeiras" type="number" min="1" max="30" value="{{ barbearia.cadeiras|length }}" required></label>
+    </div>
+    <label>Regras da casa <textarea name="regras" rows="3">{{ barbearia.regras }}</textarea></label>
+    <button type="submit">Salvar perfil</button>
+  </form>
+</article>
 
 <h3>Horários ociosos</h3>
 <table>

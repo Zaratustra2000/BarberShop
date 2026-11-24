@@ -9,7 +9,7 @@
   <div class="mapa" data-mapa-marcadores='{{ marcadores|tojson }}'></div>
   <ul>
   {% for item in perfil.proximos_locais %}
-    <li><strong>{{ item.barbearia.nome }}</strong> ({{ item.barbearia.endereco }}): {{ item.bloco.periodo.inicio|data_hora }} às {{ item.bloco.periodo.fim|hora }}</li>
+    <li><strong><a href="{{ url_for('cliente.perfil_da_barbearia', barbearia_id=item.barbearia.id) }}">{{ item.barbearia.nome }}</a></strong> ({{ item.barbearia.endereco }}): {{ item.bloco.periodo.inicio|data_hora }} às {{ item.bloco.periodo.fim|hora }}</li>
   {% endfor %}
   </ul>
 {% else %}

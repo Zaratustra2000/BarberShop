@@ -77,10 +77,32 @@ class Barbearia:
     def pertence_a(self, dono_id: str) -> bool:
         return self.dono_id == dono_id
 
+    def editar(self, nome: str, endereco: str, bairro: str, latitude: float,
+               longitude: float, regras: str) -> None:
+        self.nome = nome
+        self.endereco = endereco
+        self.bairro = bairro
+        self.latitude = latitude
+        self.longitude = longitude
+        self.regras = regras
+        self.__post_init__()
+
     def adicionar_cadeira(self) -> Cadeira:
         cadeira = Cadeira(nome="Cadeira {}".format(len(self.cadeiras) + 1))
         self.cadeiras.append(cadeira)
         return cadeira
+
+    def remover_cadeira(self, cadeira_id: str) -> None:
+        cadeira = self.cadeira(cadeira_id)
+        if any(h.cadeira_id == cadeira.id for h in self.horarios_ociosos):
+            raise ConflitoDeHorario(
+                "Não é possível remover uma cadeira com horários ociosos.")
+        if any(b.cadeira_id == cadeira.id for b in self.blocos):
+            raise ConflitoDeHorario(
+                "Não é possível remover uma cadeira com blocos de horário.")
+        self.cadeiras.remove(cadeira)
+        for posicao, existente in enumerate(self.cadeiras, start=1):
+            existente.nome = "Cadeira {}".format(posicao)
 
     def cadeira(self, cadeira_id: str) -> Cadeira:
         for cadeira in self.cadeiras:

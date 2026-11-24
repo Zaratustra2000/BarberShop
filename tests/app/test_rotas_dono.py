@@ -59,3 +59,19 @@ def test_mapa_da_nova_barbearia_usa_mapa_municipal_offline(client):
     assert 'marcador.setLatLng(e.latlng)' in script
     assert 'm.bindPopup(caixa)' in script
     assert 'chave' not in script.lower()
+
+
+def test_dono_edita_perfil_e_adiciona_cadeiras(client):
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    pagina = client.get("/dono").get_data(as_text=True)
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
+    pagina = client.post(
+        "/dono/barbearias/{}/perfil".format(barbearia_id),
+        data=dict(nome="Nova Barbershop", endereco="Rua Nova, 20",
+                  bairro="Copacabana", latitude="-22.967",
+                  longitude="-43.178", regras="Sem atrasos.",
+                  quantidade_de_cadeiras="3"),
+        follow_redirects=True).get_data(as_text=True)
+    assert "Nova Barbershop" in pagina
+    assert "Cadeira 3" in pagina

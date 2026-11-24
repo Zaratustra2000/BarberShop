@@ -42,3 +42,19 @@ def test_cliente_acha_o_barbeiro_e_agenda(client):
     client.post("/login", data=dict(email="barbeiro@exemplo.com",
                                     senha="segredo1"))
     assert "Lucas Andrade" in client.get("/barbeiro").get_data(as_text=True)
+
+
+def test_cliente_consulta_perfil_da_barbearia(client):
+    from tests.app.fluxo import dono_publica_horario
+
+    dono_publica_horario(client)
+    cadastrar_e_entrar(client, "cliente")
+    with client.application.app_context():
+        container = client.application.extensions["barbershop"]
+        dono = container.usuarios.por_email("dono@exemplo.com")
+        barbearia_id = container.consultar_barbearias_do_dono.executar(
+            dono.id)[0].id
+    perfil = client.get(
+        "/cliente/barbearias/{}".format(barbearia_id)).get_data(
+            as_text=True)
+    assert "Barbearia Exemplo" in perfil

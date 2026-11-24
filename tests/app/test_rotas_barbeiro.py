@@ -1,4 +1,4 @@
-from tests.app.conftest import cadastrar_e_entrar
+from tests.app.conftest import cadastrar_e_entrar, extrair
 
 
 def test_barbeiro_cadastra_servico_e_ve_no_painel(client):
@@ -31,3 +31,18 @@ def test_barbeiro_busca_por_bairro_e_reserva_bloco(client):
         follow_redirects=True).get_data(as_text=True)
     assert "Barbearia Exemplo" in pagina
     assert "R$ 60,00" in pagina
+
+
+def test_barbeiro_consulta_perfil_da_barbearia(client):
+    from tests.app.fluxo import dono_publica_horario
+
+    dono_publica_horario(client)
+    cadastrar_e_entrar(client, "barbeiro")
+    pagina = client.get("/barbeiro/busca?bairro=Botafogo").get_data(
+        as_text=True)
+    barbearia_id = extrair(r'name="barbearia_id" value="(\w+)"', pagina)
+    perfil = client.get(
+        "/barbeiro/barbearias/{}".format(barbearia_id)).get_data(
+            as_text=True)
+    assert "Barbearia Exemplo" in perfil
+    assert "Sem som alto." in perfil

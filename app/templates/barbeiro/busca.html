@@ -14,7 +14,7 @@
   {% for o in ofertas %}
     <article>
       <header>
-        <strong>{{ o.barbearia.nome }}</strong> · {{ o.cadeira.nome }} · {{ o.horario.preco_por_hora_centavos|reais }}/hora
+        <strong><a href="{{ url_for('barbeiro.perfil_da_barbearia', barbearia_id=o.barbearia.id) }}">{{ o.barbearia.nome }}</a></strong> · {{ o.cadeira.nome }} · {{ o.horario.preco_por_hora_centavos|reais }}/hora
         <br><small>{{ o.barbearia.endereco }} · {{ o.barbearia.bairro }}</small>
       </header>
       {% if o.barbearia.regras %}<p><small><strong>Regras da casa:</strong> {{ o.barbearia.regras }}</small></p>{% endif %}

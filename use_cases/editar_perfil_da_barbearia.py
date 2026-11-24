@@ -1,0 +1,41 @@
+from domain.erros import DadosInvalidos
+from domain.usuario import Papel
+from use_cases.acesso import exigir_usuario
+from use_cases.consultar_barbearias_do_dono import barbearia_do_dono
+from use_cases.portas import RepositorioDeBarbearias, RepositorioDeUsuarios
+
+MAXIMO_DE_CADEIRAS = 30
+
+
+class EditarPerfilDaBarbearia:
+    def __init__(self, usuarios: RepositorioDeUsuarios,
+                 barbearias: RepositorioDeBarbearias):
+        self._usuarios = usuarios
+        self._barbearias = barbearias
+
+    def executar(self, dono_id: str, barbearia_id: str, nome: str,
+                 endereco: str, bairro: str, latitude: float,
+                 longitude: float, regras: str,
+                 quantidade_de_cadeiras: int):
+        exigir_usuario(self._usuarios, dono_id, Papel.DONO)
+        if not 1 <= quantidade_de_cadeiras <= MAXIMO_DE_CADEIRAS:
+            raise DadosInvalidos("Informe de 1 a {} cadeiras.".format(
+                MAXIMO_DE_CADEIRAS))
+        barbearia = barbearia_do_dono(
+            self._barbearias, dono_id, barbearia_id)
+        barbearia.editar(nome, endereco, bairro, latitude, longitude, regras)
+        while len(barbearia.cadeiras) < quantidade_de_cadeiras:
+            barbearia.adicionar_cadeira()
+        while len(barbearia.cadeiras) > quantidade_de_cadeiras:
+            barbearia.remover_cadeira(barbearia.cadeiras[-1].id)
+        self._barbearias.salvar(barbearia)
+        return barbearia
+
+    def remover_cadeira(self, dono_id: str, barbearia_id: str,
+                        cadeira_id: str):
+        exigir_usuario(self._usuarios, dono_id, Papel.DONO)
+        barbearia = barbearia_do_dono(
+            self._barbearias, dono_id, barbearia_id)
+        barbearia.remover_cadeira(cadeira_id)
+        self._barbearias.salvar(barbearia)
+        return barbearia

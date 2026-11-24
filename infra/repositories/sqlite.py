@@ -78,9 +78,23 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
                 (barbearia.id, barbearia.dono_id, barbearia.nome,
                  barbearia.endereco, barbearia.bairro, barbearia.bairro_chave,
                  barbearia.latitude, barbearia.longitude, barbearia.regras))
+            ids_presentes = [c.id for c in barbearia.cadeiras]
+            if ids_presentes:
+                placeholders = ",".join("?" for _ in ids_presentes)
+                con.execute(
+                    "DELETE FROM cadeiras WHERE barbearia_id = ? "
+                    "AND id NOT IN ({})".format(placeholders),
+                    (barbearia.id, *ids_presentes))
+            else:
+                con.execute(
+                    "DELETE FROM cadeiras WHERE barbearia_id = ?",
+                    (barbearia.id,))
             con.executemany(
-                "INSERT OR IGNORE INTO cadeiras "
-                "(id, barbearia_id, posicao, nome) VALUES (?, ?, ?, ?)",
+                "INSERT INTO cadeiras "
+                "(id, barbearia_id, posicao, nome) VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET "
+                "barbearia_id = excluded.barbearia_id, "
+                "posicao = excluded.posicao, nome = excluded.nome",
                 [(c.id, barbearia.id, posicao, c.nome)
                  for posicao, c in enumerate(barbearia.cadeiras)])
             con.executemany(
