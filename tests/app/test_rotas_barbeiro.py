@@ -45,6 +45,30 @@ def test_barbeiro_ve_barbearias_ativas_sem_informar_bairro(client):
     assert 'data-mapa-marcadores=' in pagina
 
 
+def test_barbeiro_ve_barbearia_sem_horarios_como_indisponivel(client):
+    from tests.app.test_rotas_dono import criar_barbearia
+
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    client.post("/logout")
+    cadastrar_e_entrar(client, "barbeiro")
+
+    pagina = client.get("/barbeiro/busca").get_data(as_text=True)
+
+    assert "Barbearia Exemplo" in pagina
+    assert "Indisponível para nova reserva" in pagina
+    assert "períodos livres" in pagina
+
+
+def test_barbeiro_ve_estado_vazio_quando_sem_barbearia_ativa(client):
+    cadastrar_e_entrar(client, "barbeiro")
+
+    pagina = client.get("/barbeiro/busca?bairro=Copacabana").get_data(
+        as_text=True)
+
+    assert "Nenhuma barbearia ativa" in pagina
+
+
 def test_barbeiro_consulta_perfil_da_barbearia(client):
     from tests.app.fluxo import dono_publica_horario
 

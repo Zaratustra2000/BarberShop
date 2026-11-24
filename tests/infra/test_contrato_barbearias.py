@@ -39,6 +39,29 @@ def test_barbearias_do_dono(repos):
     assert [b.id for b in barbearias.do_dono("dono-1")] == [minha.id]
 
 
+def test_lista_somente_barbearias_ativas(repos):
+    barbearias = repos["barbearias"]
+    ativa = nova_barbearia(bairro="Botafogo")
+    desativada = nova_barbearia(bairro="Copacabana")
+    desativada.desativar()
+    barbearias.salvar(ativa)
+    barbearias.salvar(desativada)
+
+    assert [b.id for b in barbearias.ativas()] == [ativa.id]
+
+
+def test_filtro_por_bairro_aceita_trecho_normalizado(repos):
+    barbearias = repos["barbearias"]
+    encontrada = nova_barbearia(bairro="Jardim Botânico")
+    outra = nova_barbearia(bairro="Copacabana")
+    barbearias.salvar(encontrada)
+    barbearias.salvar(outra)
+
+    achadas = barbearias.no_bairro("botan")
+
+    assert [b.id for b in achadas] == [encontrada.id]
+
+
 def test_barbearia_inexistente_devolve_none(repos):
     assert repos["barbearias"].por_id("nao-existe") is None
 
