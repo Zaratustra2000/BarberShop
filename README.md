@@ -30,6 +30,13 @@ export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
 Contas de demonstração: `carlos@exemplo.com` (dono), `rafa@exemplo.com`
 (barbeiro) e `lucas@exemplo.com` (cliente).
 
+## Mapa municipal offline
+
+A aplicação entrega os tiles locais do Rio de Janeiro nos zooms 10–16. Não usa
+tile server externo para o basemap. A manutenção manual, os metadados
+obrigatórios e a verificação de navegador estão documentados em
+[docs/mapa-municipal-offline.md](docs/mapa-municipal-offline.md).
+
 ## Testes e estilo
 
 ```bash

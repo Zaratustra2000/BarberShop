@@ -127,12 +127,16 @@ def baixar_tile_local(porta, zoom, x, y):
     temporario.replace(destino)
 
 
-def gravar_metadados(data_extrato):
+def gravar_metadados(
+    data_extrato,
+    extrato="Sudeste do Brasil (Geofabrik)",
+    extrato_url=URL_EXTRATO,
+):
     metadados = {
         "municipio": "Rio de Janeiro",
         "fonte": "OpenStreetMap",
-        "extrato": "Sudeste do Brasil (Geofabrik)",
-        "extrato_url": URL_EXTRATO,
+        "extrato": extrato,
+        "extrato_url": extrato_url,
         "data_extrato": data_extrato,
         "licenca": "ODbL",
         "licenca_url": "https://opendatacommons.org/licenses/odbl/",
@@ -155,13 +159,26 @@ def gravar_metadados(data_extrato):
     )
 
 
-def preparar(caminho_extrato=None):
+def preparar(
+    caminho_extrato=None,
+    fonte_extrato="Extrato OSM local fornecido",
+    url_extrato=None,
+    data_extrato=None,
+):
     if caminho_extrato:
         extrato = Path(caminho_extrato).resolve()
         if not extrato.is_file():
             raise FileNotFoundError(f"Extrato OSM nao encontrado: {extrato}")
-        data_extrato = None
-        preparar_com_extrato(extrato, data_extrato)
+        if not data_extrato:
+            raise ValueError(
+                "Informe --data-extrato para extratos locais."
+            )
+        preparar_com_extrato(
+            extrato,
+            data_extrato,
+            fonte_extrato,
+            url_extrato,
+        )
         return
 
     with tempfile.TemporaryDirectory(
@@ -172,7 +189,12 @@ def preparar(caminho_extrato=None):
         preparar_com_extrato(extrato, data_extrato)
 
 
-def preparar_com_extrato(extrato, data_extrato):
+def preparar_com_extrato(
+    extrato,
+    data_extrato,
+    fonte_extrato="Sudeste do Brasil (Geofabrik)",
+    url_extrato=URL_EXTRATO,
+):
     identificador = uuid.uuid4().hex
     volume = f"barbershop-rio-basemap-{identificador}"
     container = f"barbershop-rio-basemap-{identificador}"
@@ -243,7 +265,7 @@ def preparar_com_extrato(extrato, data_extrato):
                 ):
                     if indice % 100 == 0:
                         print(f"{indice}/{len(tiles)} tiles")
-            gravar_metadados(data_extrato)
+            gravar_metadados(data_extrato, fonte_extrato, url_extrato)
         finally:
             if container_iniciado:
                 executar("rm", "--force", container)
@@ -259,4 +281,23 @@ if __name__ == "__main__":
             "baixa o extrato regional do Geofabrik"
         ),
     )
-    preparar(parser.parse_args().extrato)
+    parser.add_argument(
+        "--fonte-extrato",
+        default="Extrato OSM local fornecido",
+        help="descricao da origem do extrato local",
+    )
+    parser.add_argument(
+        "--url-extrato",
+        help="URL publica do extrato local, se houver",
+    )
+    parser.add_argument(
+        "--data-extrato",
+        help="data ISO 8601 da origem do extrato local",
+    )
+    argumentos = parser.parse_args()
+    preparar(
+        argumentos.extrato,
+        argumentos.fonte_extrato,
+        argumentos.url_extrato,
+        argumentos.data_extrato,
+    )

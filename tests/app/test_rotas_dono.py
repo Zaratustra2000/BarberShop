@@ -42,12 +42,16 @@ def test_mapa_da_nova_barbearia_usa_mapa_municipal_offline(client):
     script = client.get("/static/mapa.js").get_data(as_text=True)
 
     assert 'data-mapa-seletor' in pagina
+    assert 'data-lat="#latitude"' in pagina
+    assert 'data-lng="#longitude"' in pagina
     assert '/static/basemap/rio-de-janeiro/{z}/{x}/{y}.png' in script
     assert 'tile.openstreetmap.org' not in script
     assert 'https://www.openstreetmap.org/copyright' in script
     assert 'https://opendatacommons.org/licenses/odbl/' in script
     assert 'maxBounds' in script
     assert 'maxZoom: 16' in script
+    assert 'marcador.setLatLng' in script
+    assert 'L.marker' in script
     assert 'minZoom: 10' in script
     assert 'fitBounds(limites' in script
     assert 'lat.value = e.latlng.lat.toFixed(6)' in script
