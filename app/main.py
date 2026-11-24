@@ -4,6 +4,7 @@ import secrets
 
 from flask import (Flask, flash, redirect, render_template, request,
                    send_from_directory)
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from app.container import Container
 from app.formatos import registrar_filtros
@@ -16,6 +17,7 @@ def create_app(caminho_do_banco=None, relogio=None, secret_key=None):
     app = Flask(__name__)
     app.secret_key = (secret_key or os.environ.get("SECRET_KEY")
                       or secrets.token_hex(32))
+    app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024 + 64 * 1024
     caminho_do_banco = caminho_do_banco or os.environ.get(
         "BARBERSHOP_DB", os.path.join(app.instance_path, "barbershop.sqlite3"))
     os.makedirs(os.path.dirname(os.path.abspath(caminho_do_banco)),
@@ -54,6 +56,11 @@ def _registrar_tratamento_de_erros(app):
         """Regra de negócio violada: volta ao formulário com a mensagem."""
         flash(str(erro), "erro")
         return redirect(request.referrer or request.path)
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def foto_muito_grande(_erro):
+        flash("A imagem deve ter no máximo 5 MB.", "erro")
+        return redirect(request.referrer or "/")
 
     @app.errorhandler(403)
     def proibido(_erro):
