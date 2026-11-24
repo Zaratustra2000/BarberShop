@@ -9,6 +9,32 @@ CREATE TABLE IF NOT EXISTS usuarios (
     senha_hash TEXT NOT NULL,
     papel TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS barbearias (
+    id TEXT PRIMARY KEY,
+    dono_id TEXT NOT NULL,
+    nome TEXT NOT NULL,
+    endereco TEXT NOT NULL,
+    bairro TEXT NOT NULL,
+    bairro_chave TEXT NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    regras TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS ix_barbearias_bairro ON barbearias(bairro_chave);
+CREATE TABLE IF NOT EXISTS cadeiras (
+    id TEXT PRIMARY KEY,
+    barbearia_id TEXT NOT NULL REFERENCES barbearias(id),
+    posicao INTEGER NOT NULL,
+    nome TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS horarios_ociosos (
+    id TEXT PRIMARY KEY,
+    barbearia_id TEXT NOT NULL REFERENCES barbearias(id),
+    cadeira_id TEXT NOT NULL REFERENCES cadeiras(id),
+    inicio TEXT NOT NULL,
+    fim TEXT NOT NULL,
+    preco_por_hora_centavos INTEGER NOT NULL
+);
 """
 
 

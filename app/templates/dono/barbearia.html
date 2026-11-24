@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}{{ barbearia.nome }}{% endblock %}
+{% block conteudo %}
+<hgroup>
+  <h2>{{ barbearia.nome }}</h2>
+  <p>{{ barbearia.endereco }} · {{ barbearia.bairro }}</p>
+</hgroup>
+{% if barbearia.regras %}<p><strong>Regras da casa:</strong> {{ barbearia.regras }}</p>{% endif %}
+<p><strong>Cadeiras:</strong> {% for c in barbearia.cadeiras %}{{ c.nome }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+
+<h3>Horários ociosos</h3>
+<table>
+  <thead><tr><th>Cadeira</th><th>Início</th><th>Fim</th><th>Preço/hora</th></tr></thead>
+  <tbody>
+  {% for h in barbearia.horarios_ociosos %}
+    <tr><td>{{ nome_da_cadeira[h.cadeira_id] }}</td><td>{{ h.periodo.inicio|data_hora }}</td><td>{{ h.periodo.fim|data_hora }}</td><td>{{ h.preco_por_hora_centavos|reais }}</td></tr>
+  {% else %}
+    <tr><td colspan="4">Nenhum horário ocioso publicado.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<article>
+  <h4>Publicar horário ocioso</h4>
+  <form method="post" action="/dono/barbearias/{{ barbearia.id }}/horarios">
+    <div class="grid">
+      <label>Cadeira
+        <select name="cadeira_id" required>
+          {% for c in barbearia.cadeiras %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Início <input type="datetime-local" name="inicio" required></label>
+      <label>Fim <input type="datetime-local" name="fim" required></label>
+      <label>Preço por hora (R$) <input name="preco_por_hora" inputmode="decimal" placeholder="30,00" required></label>
+    </div>
+    <button type="submit">Publicar</button>
+  </form>
+</article>
+{% endblock %}

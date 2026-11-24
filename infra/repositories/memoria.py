@@ -34,6 +34,18 @@ class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
     def __init__(self):
         self._dados = {}
 
+    def salvar(self, barbearia):
+        self._dados[barbearia.id] = deepcopy(barbearia)
+
+    def por_id(self, barbearia_id):
+        return deepcopy(self._dados.get(barbearia_id))
+
+    def do_dono(self, dono_id):
+        return self._filtrar(lambda b: b.dono_id == dono_id)
+
+    def _filtrar(self, criterio):
+        return [deepcopy(b) for b in self._dados.values() if criterio(b)]
+
 
 class RepositorioDeServicosEmMemoria(RepositorioDeServicos):
     def __init__(self):

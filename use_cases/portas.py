@@ -6,8 +6,9 @@ pequena e específica (Princípio da Segregação de Interfaces).
 """
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
+from domain.barbearia import Barbearia
 from domain.usuario import Usuario
 
 
@@ -26,7 +27,19 @@ class RepositorioDeUsuarios(ABC):
 
 
 class RepositorioDeBarbearias(ABC):
-    pass
+    """Lê e grava o agregado Barbearia inteiro (ADR 0001)."""
+
+    @abstractmethod
+    def salvar(self, barbearia: Barbearia) -> None:
+        ...
+
+    @abstractmethod
+    def por_id(self, barbearia_id: str) -> Optional[Barbearia]:
+        ...
+
+    @abstractmethod
+    def do_dono(self, dono_id: str) -> List[Barbearia]:
+        ...
 
 
 class RepositorioDeServicos(ABC):

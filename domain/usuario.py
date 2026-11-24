@@ -1,12 +1,8 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from uuid import uuid4
 
 from domain.erros import AcessoNegado, DadosInvalidos
-
-
-def novo_id() -> str:
-    return uuid4().hex
+from domain.identidade import novo_id
 
 
 class Papel(Enum):

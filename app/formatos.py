@@ -15,6 +15,20 @@ def reais_para_centavos(texto: str) -> int:
         raise DadosInvalidos("Valor em reais inválido: {}".format(texto))
 
 
+def ler_decimal(texto: str, rotulo: str) -> float:
+    try:
+        return float((texto or "").replace(",", "."))
+    except ValueError:
+        raise DadosInvalidos("Valor inválido para {}.".format(rotulo))
+
+
+def ler_inteiro(texto: str, rotulo: str) -> int:
+    try:
+        return int(texto)
+    except (TypeError, ValueError):
+        raise DadosInvalidos("Valor inválido para {}.".format(rotulo))
+
+
 def formatar_reais(centavos: int) -> str:
     inteiro, resto = divmod(int(centavos), 100)
     milhar = "{:,}".format(inteiro).replace(",", ".")

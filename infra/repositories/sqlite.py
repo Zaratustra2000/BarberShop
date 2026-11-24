@@ -1,4 +1,8 @@
 """Adapters SQLite das portas de repositório (veja docs/adr/0002)."""
+from datetime import datetime
+
+from domain.barbearia import Barbearia, Cadeira, HorarioOcioso
+from domain.periodo import Periodo
 from domain.usuario import Papel, Usuario
 from use_cases.portas import (
     RepositorioDeAgendamentos,
@@ -41,8 +45,80 @@ def _usuario(linha):
 
 
 class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
+    """Grava o agregado inteiro numa transação (ADR 0001)."""
+
     def __init__(self, banco):
         self._banco = banco
+
+    def salvar(self, barbearia):
+        with self._banco.conexao() as con:
+            con.execute(
+                "INSERT INTO barbearias (id, dono_id, nome, endereco, bairro,"
+                " bairro_chave, latitude, longitude, regras) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET nome = excluded.nome, "
+                "endereco = excluded.endereco, bairro = excluded.bairro, "
+                "bairro_chave = excluded.bairro_chave, "
+                "latitude = excluded.latitude, "
+                "longitude = excluded.longitude, regras = excluded.regras",
+                (barbearia.id, barbearia.dono_id, barbearia.nome,
+                 barbearia.endereco, barbearia.bairro, barbearia.bairro_chave,
+                 barbearia.latitude, barbearia.longitude, barbearia.regras))
+            con.executemany(
+                "INSERT OR IGNORE INTO cadeiras "
+                "(id, barbearia_id, posicao, nome) VALUES (?, ?, ?, ?)",
+                [(c.id, barbearia.id, posicao, c.nome)
+                 for posicao, c in enumerate(barbearia.cadeiras)])
+            con.executemany(
+                "INSERT OR IGNORE INTO horarios_ociosos (id, barbearia_id, "
+                "cadeira_id, inicio, fim, preco_por_hora_centavos) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                [(h.id, barbearia.id, h.cadeira_id, _data(h.periodo.inicio),
+                  _data(h.periodo.fim), h.preco_por_hora_centavos)
+                 for h in barbearia.horarios_ociosos])
+
+    def por_id(self, barbearia_id):
+        encontradas = self._carregar("id = ?", barbearia_id)
+        return encontradas[0] if encontradas else None
+
+    def do_dono(self, dono_id):
+        return self._carregar("dono_id = ?", dono_id)
+
+    def _carregar(self, filtro, *parametros):
+        with self._banco.conexao() as con:
+            linhas = con.execute(
+                "SELECT * FROM barbearias WHERE {} ORDER BY nome, id".format(
+                    filtro), parametros).fetchall()
+            return [self._montar(con, linha) for linha in linhas]
+
+    def _montar(self, con, linha):
+        barbearia = Barbearia(
+            id=linha["id"], dono_id=linha["dono_id"], nome=linha["nome"],
+            endereco=linha["endereco"], bairro=linha["bairro"],
+            latitude=linha["latitude"], longitude=linha["longitude"],
+            regras=linha["regras"])
+        barbearia.cadeiras = [
+            Cadeira(id=c["id"], nome=c["nome"]) for c in con.execute(
+                "SELECT * FROM cadeiras WHERE barbearia_id = ? "
+                "ORDER BY posicao", (barbearia.id,))]
+        barbearia.horarios_ociosos = [
+            HorarioOcioso(id=h["id"], cadeira_id=h["cadeira_id"],
+                          periodo=_periodo(h),
+                          preco_por_hora_centavos=h[
+                              "preco_por_hora_centavos"])
+            for h in con.execute(
+                "SELECT * FROM horarios_ociosos WHERE barbearia_id = ? "
+                "ORDER BY inicio, id", (barbearia.id,))]
+        return barbearia
+
+
+def _data(valor):
+    return valor.isoformat()
+
+
+def _periodo(linha):
+    return Periodo(datetime.fromisoformat(linha["inicio"]),
+                   datetime.fromisoformat(linha["fim"]))
 
 
 class RepositorioDeServicosSQLite(RepositorioDeServicos):
