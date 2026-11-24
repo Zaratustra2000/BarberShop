@@ -20,9 +20,8 @@ class AvaliarAgendamento:
 
     def executar(self, cliente_id: str, agendamento_id: str,
                  nota: int) -> Avaliacao:
-        if isinstance(nota, bool) or not isinstance(nota, int):
-            raise DadosInvalidos("A nota deve ser um número inteiro de 1 a 5.")
-        if nota < 1 or nota > 5:
+        if (isinstance(nota, bool) or not isinstance(nota, int)
+                or not 1 <= nota <= 5):
             raise DadosInvalidos("A nota deve ser um número inteiro de 1 a 5.")
         if self._usuarios.por_id(cliente_id) is None:
             raise NaoEncontrado("Cliente não encontrado.")
