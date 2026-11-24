@@ -1,6 +1,7 @@
 from domain.barbearia import Barbearia
-from domain.erros import DadosInvalidos, NaoEncontrado
+from domain.erros import DadosInvalidos
 from domain.usuario import Papel
+from use_cases.cadastrar_servico import exigir_usuario
 from use_cases.portas import RepositorioDeBarbearias, RepositorioDeUsuarios
 
 MAXIMO_DE_CADEIRAS = 30
@@ -17,10 +18,7 @@ class CadastrarBarbearia:
     def executar(self, dono_id: str, nome: str, endereco: str, bairro: str,
                  latitude: float, longitude: float, regras: str,
                  quantidade_de_cadeiras: int) -> Barbearia:
-        dono = self._usuarios.por_id(dono_id)
-        if dono is None:
-            raise NaoEncontrado("Usuário não encontrado.")
-        dono.exigir_papel(Papel.DONO)
+        dono = exigir_usuario(self._usuarios, dono_id, Papel.DONO)
         if not 1 <= quantidade_de_cadeiras <= MAXIMO_DE_CADEIRAS:
             raise DadosInvalidos("Informe de 1 a {} cadeiras.".format(
                 MAXIMO_DE_CADEIRAS))

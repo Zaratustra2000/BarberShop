@@ -2,4 +2,27 @@
 {% block titulo %}Minha agenda{% endblock %}
 {% block conteudo %}
 <h2>Minha agenda</h2>
+
+<h3>Meus serviços</h3>
+<table>
+  <thead><tr><th>Serviço</th><th>Preço</th><th>Duração</th></tr></thead>
+  <tbody>
+  {% for s in servicos %}
+    <tr><td>{{ s.nome }}</td><td>{{ s.preco_centavos|reais }}</td><td>{{ s.duracao_minutos }} min</td></tr>
+  {% else %}
+    <tr><td colspan="3">Cadastre seus serviços para receber agendamentos.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<details>
+  <summary role="button" class="secondary outline">Novo serviço</summary>
+  <form method="post" action="{{ url_for('barbeiro.cadastrar_servico') }}">
+    <div class="grid">
+      <label>Nome <input name="nome" required placeholder="Corte degradê"></label>
+      <label>Preço (R$) <input name="preco" inputmode="decimal" required placeholder="45,00"></label>
+      <label>Duração (min) <input name="duracao_minutos" type="number" min="5" max="240" step="5" value="30" required></label>
+    </div>
+    <button type="submit">Salvar serviço</button>
+  </form>
+</details>
 {% endblock %}

@@ -51,6 +51,17 @@ class RepositorioDeServicosEmMemoria(RepositorioDeServicos):
     def __init__(self):
         self._dados = {}
 
+    def salvar(self, servico):
+        self._dados[servico.id] = deepcopy(servico)
+
+    def por_id(self, servico_id):
+        return deepcopy(self._dados.get(servico_id))
+
+    def do_barbeiro(self, barbeiro_id):
+        return sorted((deepcopy(s) for s in self._dados.values()
+                       if s.barbeiro_id == barbeiro_id),
+                      key=lambda s: (s.nome, s.id))
+
 
 class RepositorioDeAgendamentosEmMemoria(RepositorioDeAgendamentos):
     def __init__(self):

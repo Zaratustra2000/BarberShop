@@ -3,6 +3,7 @@ from datetime import datetime
 
 from domain.barbearia import Barbearia, Cadeira, HorarioOcioso
 from domain.periodo import Periodo
+from domain.servico import Servico
 from domain.usuario import Papel, Usuario
 from use_cases.portas import (
     RepositorioDeAgendamentos,
@@ -124,6 +125,34 @@ def _periodo(linha):
 class RepositorioDeServicosSQLite(RepositorioDeServicos):
     def __init__(self, banco):
         self._banco = banco
+
+    def salvar(self, servico):
+        with self._banco.conexao() as con:
+            con.execute(
+                "INSERT INTO servicos (id, barbeiro_id, nome, preco_centavos,"
+                " duracao_minutos) VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET nome = excluded.nome, "
+                "preco_centavos = excluded.preco_centavos, "
+                "duracao_minutos = excluded.duracao_minutos",
+                (servico.id, servico.barbeiro_id, servico.nome,
+                 servico.preco_centavos, servico.duracao_minutos))
+
+    def por_id(self, servico_id):
+        encontrados = self._consultar("id = ?", servico_id)
+        return encontrados[0] if encontrados else None
+
+    def do_barbeiro(self, barbeiro_id):
+        return self._consultar("barbeiro_id = ?", barbeiro_id)
+
+    def _consultar(self, filtro, *parametros):
+        with self._banco.conexao() as con:
+            linhas = con.execute(
+                "SELECT * FROM servicos WHERE {} ORDER BY nome, id".format(
+                    filtro), parametros).fetchall()
+        return [Servico(id=s["id"], barbeiro_id=s["barbeiro_id"],
+                        nome=s["nome"], preco_centavos=s["preco_centavos"],
+                        duracao_minutos=s["duracao_minutos"])
+                for s in linhas]
 
 
 class RepositorioDeAgendamentosSQLite(RepositorioDeAgendamentos):

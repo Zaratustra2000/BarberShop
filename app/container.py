@@ -8,6 +8,8 @@ from infra.repositories import sqlite
 from infra.seguranca import GeradorDeHashWerkzeug, RelogioDoSistema
 from use_cases.autenticar_usuario import AutenticarUsuario
 from use_cases.cadastrar_barbearia import CadastrarBarbearia
+from use_cases.cadastrar_servico import (CadastrarServico,
+                                         ConsultarServicosDoBarbeiro)
 from use_cases.cadastrar_usuario import CadastrarUsuario
 from use_cases.consultar_barbearias_do_dono import ConsultarBarbeariasDoDono
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
@@ -22,6 +24,7 @@ class Container:
         gerador_de_hash = GeradorDeHashWerkzeug()
 
         barbearias = sqlite.RepositorioDeBarbeariasSQLite(banco)
+        servicos = sqlite.RepositorioDeServicosSQLite(banco)
 
         self.usuarios = usuarios
         self.cadastrar_barbearia = CadastrarBarbearia(usuarios, barbearias)
@@ -29,6 +32,9 @@ class Container:
             barbearias)
         self.publicar_horario_ocioso = PublicarHorarioOcioso(
             barbearias, self.relogio)
+        self.cadastrar_servico = CadastrarServico(usuarios, servicos)
+        self.consultar_servicos_do_barbeiro = ConsultarServicosDoBarbeiro(
+            servicos)
         self.cadastrar_usuario = CadastrarUsuario(usuarios, gerador_de_hash)
         self.autenticar_usuario = AutenticarUsuario(usuarios,
                                                     gerador_de_hash)

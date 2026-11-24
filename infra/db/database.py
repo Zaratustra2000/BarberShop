@@ -35,6 +35,13 @@ CREATE TABLE IF NOT EXISTS horarios_ociosos (
     fim TEXT NOT NULL,
     preco_por_hora_centavos INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS servicos (
+    id TEXT PRIMARY KEY,
+    barbeiro_id TEXT NOT NULL,
+    nome TEXT NOT NULL,
+    preco_centavos INTEGER NOT NULL,
+    duracao_minutos INTEGER NOT NULL
+);
 """
 
 

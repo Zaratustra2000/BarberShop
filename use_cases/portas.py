@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from domain.barbearia import Barbearia
+from domain.servico import Servico
 from domain.usuario import Usuario
 
 
@@ -43,7 +44,17 @@ class RepositorioDeBarbearias(ABC):
 
 
 class RepositorioDeServicos(ABC):
-    pass
+    @abstractmethod
+    def salvar(self, servico: Servico) -> None:
+        ...
+
+    @abstractmethod
+    def por_id(self, servico_id: str) -> Optional[Servico]:
+        ...
+
+    @abstractmethod
+    def do_barbeiro(self, barbeiro_id: str) -> List[Servico]:
+        """Serviços do barbeiro em ordem alfabética."""
 
 
 class RepositorioDeAgendamentos(ABC):
