@@ -24,6 +24,18 @@ def test_agendamentos_por_barbeiro_e_por_cliente_em_ordem(repos):
     assert agendamentos.do_cliente("ana") == [alheio]
 
 
+def test_agendamento_cancelado_sobrevive_a_salvar_e_carregar(repos):
+    agendamentos = repos["agendamentos"]
+    original = agendamento()
+    original.cancelar()
+
+    agendamentos.salvar(original)
+
+    carregado = agendamentos.por_id(original.id)
+    assert carregado == original
+    assert carregado.cancelado
+
+
 def test_barbeiros_por_nome_ignora_maiusculas_e_outras_personas(repos):
     usuarios = repos["usuarios"]
     for i, (nome, papel) in enumerate((("Rafa Souza", Papel.BARBEIRO),

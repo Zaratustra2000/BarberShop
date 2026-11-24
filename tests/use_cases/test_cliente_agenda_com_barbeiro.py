@@ -127,6 +127,29 @@ def test_barbeiro_cancela_agendamento_futuro_e_horario_fica_disponivel(
     assert novo.cliente_id == outro.id
 
 
+def test_barbeiro_nao_cancela_agendamento_de_outro_barbeiro(ctx, cenario):
+    agendamento = agendar(
+        ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+    outro = ctx.cadastrar(
+        "barbeiro", nome="Bruno Costa", email="bruno@exemplo.com")
+
+    with pytest.raises(AcessoNegado):
+        CancelarAgendamento(
+            ctx.usuarios, ctx.agendamentos, ctx.relogio).executar(
+            outro.id, agendamento.id)
+
+
+def test_barbeiro_nao_cancela_agendamento_passado(ctx, cenario):
+    agendamento = agendar(
+        ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+    ctx.relogio.ajustar(h(15))
+
+    with pytest.raises(DadosInvalidos):
+        CancelarAgendamento(
+            ctx.usuarios, ctx.agendamentos, ctx.relogio).executar(
+            cenario["rafa"].id, agendamento.id)
+
+
 def test_agendamento_no_passado_e_recusado(ctx, cenario):
     ctx.relogio.ajustar(h(15, dia=7))
     with pytest.raises(DadosInvalidos):
