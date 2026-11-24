@@ -72,3 +72,44 @@ def test_cadeiras_diferentes_podem_ter_o_mesmo_horario():
     b.publicar_horario_ocioso(c1.id, Periodo(hora(13), hora(18)), 3000)
     b.publicar_horario_ocioso(c2.id, Periodo(hora(13), hora(18)), 3000)
     assert len(b.horarios_ociosos) == 2
+
+
+def com_horario_ocioso(preco=3000):
+    b = barbearia()
+    cadeira = b.adicionar_cadeira()
+    horario = b.publicar_horario_ocioso(
+        cadeira.id, Periodo(hora(13), hora(18)), preco)
+    return b, horario
+
+
+def test_bloco_custa_preco_por_hora_vezes_duracao():
+    b, horario = com_horario_ocioso(preco=3000)
+    bloco = b.reservar_bloco(horario.id, "rafa", Periodo(hora(14),
+                                                          hora(15, 30)))
+    assert bloco.valor_centavos == 4500
+    assert b.blocos == [bloco]
+
+
+def test_bloco_precisa_caber_no_horario_ocioso():
+    b, horario = com_horario_ocioso()
+    with pytest.raises(DadosInvalidos):
+        b.reservar_bloco(horario.id, "rafa", Periodo(hora(17), hora(19)))
+
+
+def test_blocos_na_mesma_cadeira_nao_se_sobrepoem():
+    b, horario = com_horario_ocioso()
+    b.reservar_bloco(horario.id, "rafa", Periodo(hora(13), hora(15)))
+    with pytest.raises(ConflitoDeHorario):
+        b.reservar_bloco(horario.id, "outro", Periodo(hora(14), hora(16)))
+
+
+def test_periodos_livres_descontam_os_blocos():
+    b, horario = com_horario_ocioso()
+    b.reservar_bloco(horario.id, "rafa", Periodo(hora(14), hora(15)))
+    assert b.periodos_livres(horario.id) == [Periodo(hora(13), hora(14)),
+                                             Periodo(hora(15), hora(18))]
+
+
+def test_horario_ocioso_inexistente_nao_e_encontrado():
+    with pytest.raises(NaoEncontrado):
+        barbearia().reservar_bloco("x", "rafa", Periodo(hora(13), hora(14)))
