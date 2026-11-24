@@ -1,0 +1,35 @@
+from tests.app.conftest import cadastrar_e_entrar, extrair
+
+
+def criar_barbearia(client):
+    return client.post("/dono/barbearias", data=dict(
+        nome="Barbearia Exemplo", endereco="Rua Exemplo, 100",
+        bairro="Botafogo", latitude="-22.951", longitude="-43.184",
+        regras="Sem som alto.", quantidade_de_cadeiras="2"),
+        follow_redirects=True)
+
+
+def test_dono_cadastra_barbearia_e_publica_horario_ocioso(client):
+    cadastrar_e_entrar(client, "dono")
+    pagina = criar_barbearia(client).get_data(as_text=True)
+    assert "Cadeira 2" in pagina
+
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)/horarios', pagina)
+    cadeira_id = extrair(r'<option value="(\w+)">Cadeira 1', pagina)
+    pagina = client.post(
+        "/dono/barbearias/{}/horarios".format(barbearia_id),
+        data=dict(cadeira_id=cadeira_id, inicio="2030-01-07T13:00",
+                  fim="2030-01-07T18:00", preco_por_hora="30,00"),
+        follow_redirects=True).get_data(as_text=True)
+    assert "R$ 30,00" in pagina
+    assert "07/01/2030 13:00" in pagina
+
+
+def test_regra_violada_volta_com_mensagem(client):
+    cadastrar_e_entrar(client, "dono")
+    pagina = client.post("/dono/barbearias", data=dict(
+        nome="", endereco="Rua Exemplo", bairro="Botafogo",
+        latitude="-22.9", longitude="-43.1", quantidade_de_cadeiras="1"),
+        headers={"Referer": "/dono/barbearias/nova"},
+        follow_redirects=True).get_data(as_text=True)
+    assert "Informe o nome" in pagina
