@@ -60,6 +60,14 @@ Trabalho oferecido por um barbeiro (corte, barba etc.), com preço e duração
 definidos por ele.
 _Avoid_: procedimento, produto
 
+**Avaliação**:
+Nota inteira de 1 a 5, sem comentário, que o cliente dá a um agendamento seu
+não cancelado, depois do fim do horário previsto. Há no máximo uma por
+agendamento e o cliente pode alterá-la. A média e a quantidade das avaliações
+de um barbeiro aparecem na lista e no perfil dele. A avaliação não verifica
+que o cliente compareceu ao atendimento.
+_Avoid_: review, comentário, estrelas
+
 **Agenda do barbeiro**:
 Conjunto dos blocos de horário e dos agendamentos de um barbeiro.
 

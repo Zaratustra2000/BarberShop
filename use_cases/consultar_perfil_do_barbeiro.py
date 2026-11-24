@@ -2,12 +2,14 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from domain.agenda import AgendaDoBarbeiro, HorarioDisponivel, ItemDaAgenda
+from domain.avaliacao import ResumoDeAvaliacoes
 from domain.erros import NaoEncontrado
 from domain.servico import Servico
 from domain.usuario import Papel, Usuario
 from use_cases.acesso import exigir_usuario
 from use_cases.consultar_agenda_do_barbeiro import montar_agenda
 from use_cases.portas import (RepositorioDeAgendamentos,
+                              RepositorioDeAvaliacoes,
                               RepositorioDeBarbearias, RepositorioDeServicos,
                               RepositorioDeUsuarios, Relogio)
 
@@ -18,6 +20,8 @@ class PerfilDoBarbeiro:
     servicos: List[Servico]
     agenda: AgendaDoBarbeiro
     proximos_locais: List[ItemDaAgenda]
+    avaliacoes: ResumoDeAvaliacoes = field(
+        default_factory=ResumoDeAvaliacoes)
     servico_escolhido: Optional[Servico] = None
     horarios: List[HorarioDisponivel] = field(default_factory=list)
 
@@ -28,11 +32,13 @@ class ConsultarPerfilDoBarbeiro:
     def __init__(self, usuarios: RepositorioDeUsuarios,
                  barbearias: RepositorioDeBarbearias,
                  servicos: RepositorioDeServicos,
-                 agendamentos: RepositorioDeAgendamentos, relogio: Relogio):
+                 agendamentos: RepositorioDeAgendamentos,
+                 avaliacoes: RepositorioDeAvaliacoes, relogio: Relogio):
         self._usuarios = usuarios
         self._barbearias = barbearias
         self._servicos = servicos
         self._agendamentos = agendamentos
+        self._avaliacoes = avaliacoes
         self._relogio = relogio
 
     def executar(self, barbeiro_id: str,
@@ -45,7 +51,9 @@ class ConsultarPerfilDoBarbeiro:
         perfil = PerfilDoBarbeiro(
             barbeiro=barbeiro,
             servicos=self._servicos.do_barbeiro(barbeiro_id),
-            agenda=agenda, proximos_locais=agenda.a_partir_de(agora))
+            agenda=agenda, proximos_locais=agenda.a_partir_de(agora),
+            avaliacoes=ResumoDeAvaliacoes.de(
+                self._avaliacoes.do_barbeiro(barbeiro_id)))
         if servico_id:
             servico = self._servicos.por_id(servico_id)
             if servico is None or servico.barbeiro_id != barbeiro_id:

@@ -148,3 +148,88 @@ def test_cliente_ve_perfil_do_barbeiro_sem_o_email(client):
     assert "Rafael Souza" in pagina
     assert "Especialista em cortes clássicos." in pagina
     assert "barbeiro@exemplo.com" not in pagina
+
+
+def agendar_como_cliente(client):
+    """Lucas agenda o corte das 14h30 com Rafa; devolve o caminho do perfil."""
+    barbeiro_pronto_para_atender(client)
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+    pagina = client.get("/cliente").get_data(as_text=True)
+    perfil = extrair(r'href="(/cliente/barbeiros/\w+)"', pagina)
+    pagina = client.get(perfil).get_data(as_text=True)
+    servico_id = extrair(r'servico_id=(\w+)"', pagina)
+    client.post("/cliente/agendamentos", data=dict(
+        servico_id=servico_id, inicio="2030-01-07T14:30"))
+    return perfil
+
+
+def ajustar_relogio(client, agora):
+    with client.application.app_context():
+        client.application.extensions["barbershop"].relogio.ajustar(agora)
+
+
+def test_cliente_sem_avaliacoes_ve_estado_vazio_na_lista_e_no_perfil(client):
+    perfil = agendar_como_cliente(client)
+
+    lista = client.get("/cliente").get_data(as_text=True)
+    pagina = client.get(perfil).get_data(as_text=True)
+
+    assert "Ainda sem avaliações" in lista
+    assert "Ainda sem avaliações" in pagina
+    assert "Avaliar" not in lista
+
+
+def test_cliente_avalia_agendamento_terminado_e_ve_a_media(client):
+    from datetime import datetime
+
+    perfil = agendar_como_cliente(client)
+    ajustar_relogio(client, datetime(2030, 1, 7, 15, 11))
+
+    agendamentos = client.get("/cliente").get_data(as_text=True)
+    acao = extrair(r'action="(/cliente/agendamentos/\w+/avaliacao)"',
+                   agendamentos)
+    client.post(acao, data=dict(nota="4"))
+    client.post(acao, data=dict(nota="5"))
+
+    lista = client.get("/cliente").get_data(as_text=True)
+    pagina = client.get(perfil).get_data(as_text=True)
+    assert "5,0" in lista and "(1 avaliação)" in lista
+    assert "5,0" in pagina and "(1 avaliação)" in pagina
+    assert "Ainda sem avaliações" not in pagina
+    assert "Sua nota: 5" in lista
+
+
+def test_cliente_nao_avalia_antes_do_fim_nem_com_nota_invalida(client):
+    from datetime import datetime
+
+    perfil = agendar_como_cliente(client)
+    agendamentos = client.get("/cliente").get_data(as_text=True)
+    assert "/avaliacao" not in agendamentos
+
+    ajustar_relogio(client, datetime(2030, 1, 7, 15, 11))
+    acao = extrair(r'action="(/cliente/agendamentos/\w+/avaliacao)"',
+                   client.get("/cliente").get_data(as_text=True))
+    client.post(acao, data=dict(nota="6"))
+    client.post(acao, data=dict(nota="abc"))
+
+    assert "Ainda sem avaliações" in client.get(perfil).get_data(
+        as_text=True)
+
+
+def test_outra_pessoa_nao_avalia_agendamento_do_cliente(client):
+    from datetime import datetime
+
+    agendar_como_cliente(client)
+    ajustar_relogio(client, datetime(2030, 1, 7, 15, 11))
+    acao = extrair(r'action="(/cliente/agendamentos/\w+/avaliacao)"',
+                   client.get("/cliente").get_data(as_text=True))
+
+    sair(client)
+    cadastrar_e_entrar(client, "cliente", nome="Outro Cliente",
+                       email="outro@exemplo.com")
+    assert client.post(acao, data=dict(nota="1")).status_code == 403
+
+    sair(client)
+    client.post("/login", data=dict(email="barbeiro@exemplo.com",
+                                    senha="segredo1"))
+    assert client.post(acao, data=dict(nota="1")).status_code == 403

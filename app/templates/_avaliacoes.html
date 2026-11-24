@@ -1,0 +1,7 @@
+{% macro resumo(avaliacoes) %}
+{% if avaliacoes.quantidade %}
+  ⭐ {{ avaliacoes.media|media }} ({{ avaliacoes.quantidade }} {{ "avaliação" if avaliacoes.quantidade == 1 else "avaliações" }})
+{% else %}
+  Ainda sem avaliações
+{% endif %}
+{% endmacro %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_avaliacoes.html" import resumo %}
 {% block titulo %}Meus agendamentos{% endblock %}
 {% block conteudo %}
 <h2>Encontre seu barbeiro de confiança</h2>
@@ -11,6 +12,7 @@
   {% set b = resultado.barbeiro %}
   <li>
     <a href="/cliente/barbeiros/{{ b.id }}">{{ b.nome }}</a>
+    <br><small>{{ resumo(resultado.avaliacoes) }}</small>
     {% if not resultado.tem_servico %}
       <br><small>Este barbeiro ainda não tem Serviços cadastrados.</small>
     {% elif not resultado.tem_horario %}
@@ -30,7 +32,7 @@
 
 <h2>Meus agendamentos</h2>
 <table>
-  <thead><tr><th>Quando</th><th>Serviço</th><th>Barbeiro</th><th>Onde</th><th>Valor</th><th>Estado</th></tr></thead>
+  <thead><tr><th>Quando</th><th>Serviço</th><th>Barbeiro</th><th>Onde</th><th>Valor</th><th>Estado</th><th>Avaliação</th></tr></thead>
   <tbody>
   {% for item in agendamentos %}
     <tr>
@@ -40,9 +42,20 @@
       <td>{% if item.barbearia %}{{ item.barbearia.nome }}<br><small>{{ item.barbearia.endereco }}</small>{% endif %}</td>
       <td>{{ item.agendamento.preco_centavos|reais }}</td>
       <td>{% if item.agendamento.cancelado %}<strong>Cancelado</strong>{% else %}Ativo{% endif %}</td>
+      <td>
+        {% if item.avaliacao %}Sua nota: {{ item.avaliacao.nota }}{% endif %}
+        {% if item.pode_avaliar %}
+        <form method="post" action="/cliente/agendamentos/{{ item.agendamento.id }}/avaliacao" class="inline">
+          <select name="nota" aria-label="Nota de 1 a 5">
+            {% for n in range(1, 6) %}<option value="{{ n }}" {% if item.avaliacao and item.avaliacao.nota == n %}selected{% endif %}>{{ n }}</option>{% endfor %}
+          </select>
+          <button type="submit" class="outline">{% if item.avaliacao %}Alterar nota{% else %}Avaliar{% endif %}</button>
+        </form>
+        {% endif %}
+      </td>
     </tr>
   {% else %}
-    <tr><td colspan="6">Você ainda não tem agendamentos.</td></tr>
+    <tr><td colspan="7">Você ainda não tem agendamentos.</td></tr>
   {% endfor %}
   </tbody>
 </table>

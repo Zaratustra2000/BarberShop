@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from domain.agendamento import Agendamento
+from domain.avaliacao import Avaliacao
 from domain.barbearia import (Barbearia, BlocoDeHorario, Cadeira,
                               HorarioOcioso)
 from domain.periodo import Periodo
@@ -9,6 +10,7 @@ from domain.servico import Servico
 from domain.usuario import Papel, Usuario
 from use_cases.portas import (
     RepositorioDeAgendamentos,
+    RepositorioDeAvaliacoes,
     RepositorioDeBarbearias,
     RepositorioDeServicos,
     RepositorioDeUsuarios,
@@ -319,3 +321,37 @@ class RepositorioDeAgendamentosSQLite(RepositorioDeAgendamentos):
             bloco_id=a["bloco_id"], periodo=_periodo(a),
             preco_centavos=a["preco_centavos"],
             cancelado=bool(a["cancelado"]))
+
+
+class RepositorioDeAvaliacoesSQLite(RepositorioDeAvaliacoes):
+    def __init__(self, banco):
+        self._banco = banco
+
+    def salvar(self, avaliacao):
+        a = avaliacao
+        with self._banco.conexao() as con:
+            con.execute(
+                "INSERT INTO avaliacoes (id, agendamento_id, cliente_id, "
+                "barbeiro_id, nota) VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(agendamento_id) DO UPDATE SET nota = "
+                "excluded.nota",
+                (a.id, a.agendamento_id, a.cliente_id, a.barbeiro_id,
+                 a.nota))
+
+    def do_agendamento(self, agendamento_id):
+        avaliacoes = self._consultar("agendamento_id = ?", agendamento_id)
+        return avaliacoes[0] if avaliacoes else None
+
+    def do_barbeiro(self, barbeiro_id):
+        return self._consultar("barbeiro_id = ?", barbeiro_id)
+
+    def _consultar(self, filtro, *parametros):
+        with self._banco.conexao() as con:
+            linhas = con.execute(
+                "SELECT * FROM avaliacoes WHERE {} "
+                "ORDER BY agendamento_id, id".format(filtro),
+                parametros).fetchall()
+        return [Avaliacao(id=a["id"], agendamento_id=a["agendamento_id"],
+                          cliente_id=a["cliente_id"],
+                          barbeiro_id=a["barbeiro_id"], nota=a["nota"])
+                for a in linhas]

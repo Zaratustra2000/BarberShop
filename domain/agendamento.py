@@ -1,3 +1,4 @@
+from datetime import datetime
 from dataclasses import dataclass, field
 
 from domain.identidade import novo_id
@@ -25,3 +26,10 @@ class Agendamento:
 
     def cancelar(self) -> None:
         self.cancelado = True
+
+    def avaliavel_em(self, agora: datetime) -> bool:
+        """Só se avalia o que não foi cancelado, depois do fim previsto.
+
+        O horário passado não prova que o atendimento aconteceu.
+        """
+        return not self.cancelado and agora > self.periodo.fim

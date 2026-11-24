@@ -32,12 +32,10 @@ class AvaliarAgendamento:
         if agendamento.cliente_id != cliente_id:
             raise AcessoNegado(
                 "Somente o Cliente dono do Agendamento pode avaliá-lo.")
-        if agendamento.cancelado:
+        if not agendamento.avaliavel_em(self._relogio.agora()):
             raise DadosInvalidos(
-                "Agendamento cancelado não pode ser avaliado.")
-        if self._relogio.agora() <= agendamento.periodo.fim:
-            raise DadosInvalidos(
-                "O Agendamento só pode ser avaliado depois do término.")
+                "Só é possível avaliar Agendamento não cancelado, "
+                "depois do horário previsto de término.")
 
         existente = self._avaliacoes.do_agendamento(agendamento_id)
         if existente:

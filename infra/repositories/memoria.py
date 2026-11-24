@@ -115,6 +115,8 @@ class RepositorioDeAvaliacoesEmMemoria(RepositorioDeAvaliacoes):
         self._dados = {}
 
     def salvar(self, avaliacao):
+        self._dados = {i: a for i, a in self._dados.items()
+                       if a.agendamento_id != avaliacao.agendamento_id}
         self._dados[avaliacao.id] = deepcopy(avaliacao)
 
     def do_agendamento(self, agendamento_id):

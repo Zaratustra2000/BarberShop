@@ -3,7 +3,8 @@ from datetime import datetime
 
 import pytest
 
-from domain.erros import AcessoNegado, ConflitoDeHorario, DadosInvalidos
+from domain.erros import (AcessoNegado, ConflitoDeHorario, DadosInvalidos,
+                          NaoEncontrado)
 from tests.use_cases.test_barbeiro_cadastra_servicos import cadastrar_servico
 from tests.use_cases.test_barbeiro_reserva_bloco import (
     barbearia_com_horario, reservar)
@@ -71,16 +72,19 @@ def test_barbeiro_sem_horario_pode_abrir_perfil(ctx):
 
     perfil = ConsultarPerfilDoBarbeiro(
         ctx.usuarios, ctx.barbearias, ctx.servicos, ctx.agendamentos,
-        ctx.relogio).executar(rafa.id)
+        ctx.avaliacoes, ctx.relogio).executar(rafa.id)
 
     assert perfil.servicos
     assert perfil.proximos_locais == []
+    assert perfil.avaliacoes.quantidade == 0
+    assert perfil.avaliacoes.media is None
 
 
 def test_perfil_mostra_onde_o_barbeiro_atende_e_os_horarios(ctx, cenario):
     perfil = ConsultarPerfilDoBarbeiro(
         ctx.usuarios, ctx.barbearias, ctx.servicos, ctx.agendamentos,
-        ctx.relogio).executar(cenario["rafa"].id, cenario["corte"].id)
+        ctx.avaliacoes, ctx.relogio).executar(
+        cenario["rafa"].id, cenario["corte"].id)
     assert [i.barbearia.nome for i in perfil.agenda.itens] == [
         "Barbearia Exemplo"]
     assert [x.inicio for x in perfil.horarios] == [
@@ -91,8 +95,8 @@ def test_agendamento_aparece_para_o_cliente_e_para_o_barbeiro(ctx, cenario):
     agendar(ctx, cenario["lucas"], cenario["corte"], h(14, 30))
 
     do_cliente, = ConsultarAgendamentosDoCliente(
-        ctx.usuarios, ctx.barbearias, ctx.agendamentos).executar(
-        cenario["lucas"].id)
+        ctx.usuarios, ctx.barbearias, ctx.agendamentos, ctx.avaliacoes,
+        ctx.relogio).executar(cenario["lucas"].id)
     assert do_cliente.barbeiro_nome == "Rafa Souza"
     assert do_cliente.barbearia.nome == "Barbearia Exemplo"
     assert do_cliente.agendamento.preco_centavos == 4500
@@ -189,12 +193,96 @@ def test_perfil_agrega_media_e_quantidade_validas(ctx, cenario):
 
     perfil = ConsultarPerfilDoBarbeiro(
         ctx.usuarios, ctx.barbearias, ctx.servicos, ctx.agendamentos,
-        ctx.relogio, ctx.avaliacoes).executar(cenario["rafa"].id)
+        ctx.avaliacoes, ctx.relogio).executar(cenario["rafa"].id)
 
-    assert perfil.media_avaliacoes == 4
-    assert perfil.quantidade_avaliacoes == 2
+    assert perfil.avaliacoes.media == 4
+    assert perfil.avaliacoes.quantidade == 2
 
 
 def test_barbeiro_nao_agenda_como_cliente(ctx, cenario):
     with pytest.raises(AcessoNegado):
         agendar(ctx, cenario["rafa"], cenario["corte"], h(14))
+
+
+def avaliar(ctx, pessoa, agendamento, nota):
+    return AvaliarAgendamento(
+        ctx.usuarios, ctx.agendamentos, ctx.avaliacoes,
+        ctx.relogio).executar(pessoa.id, agendamento.id, nota)
+
+
+@pytest.fixture
+def terminado(ctx, cenario):
+    """Agendamento de Lucas das 14h30 às 15h10, já terminado."""
+    agendamento = agendar(ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+    ctx.relogio.ajustar(h(15, 11))
+    return agendamento
+
+
+@pytest.mark.parametrize("nota", [0, 6, -1, 3.5, "4", None, True])
+def test_nota_fora_de_1_a_5_inteiro_e_recusada(
+        ctx, cenario, terminado, nota):
+    with pytest.raises(DadosInvalidos):
+        avaliar(ctx, cenario["lucas"], terminado, nota)
+    assert ctx.avaliacoes.do_agendamento(terminado.id) is None
+
+
+@pytest.mark.parametrize("nota", [1, 5])
+def test_limites_da_nota_sao_aceitos(ctx, cenario, terminado, nota):
+    assert avaliar(ctx, cenario["lucas"], terminado, nota).nota == nota
+
+
+def test_nao_avalia_antes_do_fim_do_horario_previsto(ctx, cenario):
+    agendamento = agendar(ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+    for agora in (h(14, 45), h(15, 10)):
+        ctx.relogio.ajustar(agora)
+        with pytest.raises(DadosInvalidos):
+            avaliar(ctx, cenario["lucas"], agendamento, 5)
+    ctx.relogio.ajustar(h(15, 11))
+    assert avaliar(ctx, cenario["lucas"], agendamento, 5).nota == 5
+
+
+def test_nao_avalia_agendamento_cancelado(ctx, cenario):
+    agendamento = agendar(ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+    CancelarAgendamento(ctx.usuarios, ctx.agendamentos, ctx.relogio).executar(
+        cenario["rafa"].id, agendamento.id)
+    ctx.relogio.ajustar(h(15, 11))
+
+    with pytest.raises(DadosInvalidos):
+        avaliar(ctx, cenario["lucas"], agendamento, 5)
+
+
+def test_so_o_cliente_do_agendamento_avalia(ctx, cenario, terminado):
+    outro_cliente = ctx.cadastrar("cliente", email="outro@exemplo.com")
+    dono = ctx.cadastrar("dono", email="outro-dono@exemplo.com")
+    for pessoa in (outro_cliente, cenario["rafa"], dono):
+        with pytest.raises(AcessoNegado):
+            avaliar(ctx, pessoa, terminado, 1)
+    assert ctx.avaliacoes.do_agendamento(terminado.id) is None
+
+
+def test_outra_pessoa_nao_altera_avaliacao_existente(ctx, cenario, terminado):
+    avaliar(ctx, cenario["lucas"], terminado, 5)
+
+    with pytest.raises(AcessoNegado):
+        avaliar(ctx, cenario["rafa"], terminado, 1)
+
+    assert ctx.avaliacoes.do_agendamento(terminado.id).nota == 5
+
+
+def test_agendamento_inexistente_nao_e_avaliado(ctx, cenario, terminado):
+    terminado.id = "inexistente"
+    with pytest.raises(NaoEncontrado):
+        avaliar(ctx, cenario["lucas"], terminado, 5)
+
+
+def test_alterar_a_nota_nao_cria_segunda_avaliacao_na_media(
+        ctx, cenario, terminado):
+    avaliar(ctx, cenario["lucas"], terminado, 5)
+    avaliar(ctx, cenario["lucas"], terminado, 2)
+
+    perfil = ConsultarPerfilDoBarbeiro(
+        ctx.usuarios, ctx.barbearias, ctx.servicos, ctx.agendamentos,
+        ctx.avaliacoes, ctx.relogio).executar(cenario["rafa"].id)
+
+    assert perfil.avaliacoes.quantidade == 1
+    assert perfil.avaliacoes.media == 2

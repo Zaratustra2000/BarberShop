@@ -1,7 +1,7 @@
 """Controllers do cliente (US5)."""
 from flask import Blueprint, redirect, render_template, request, url_for
 
-from app.formatos import ler_data_hora
+from app.formatos import ler_data_hora, ler_inteiro
 from app.routes.sessao import container, requer_papel, usuario_id
 
 bp = Blueprint("cliente", __name__, url_prefix="/cliente")
@@ -27,6 +27,7 @@ def painel():
             "barbeiro": barbeiro,
             "tem_servico": bool(perfil.servicos),
             "tem_horario": tem_horario,
+            "avaliacoes": perfil.avaliacoes,
         })
     return render_template(
         "cliente/painel.html", nome=nome,
@@ -56,6 +57,15 @@ def agendar():
         cliente_id=usuario_id(),
         servico_id=request.form.get("servico_id", ""),
         inicio=ler_data_hora(request.form.get("inicio")))
+    return redirect(url_for("cliente.painel"))
+
+
+@bp.post("/agendamentos/<agendamento_id>/avaliacao")
+@requer_papel("cliente")
+def avaliar(agendamento_id):
+    container().avaliar_agendamento.executar(
+        cliente_id=usuario_id(), agendamento_id=agendamento_id,
+        nota=ler_inteiro(request.form.get("nota"), "nota"))
     return redirect(url_for("cliente.painel"))
 
 

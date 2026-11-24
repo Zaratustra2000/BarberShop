@@ -74,6 +74,15 @@ CREATE INDEX IF NOT EXISTS ix_agendamentos_barbeiro
     ON agendamentos(barbeiro_id);
 CREATE INDEX IF NOT EXISTS ix_agendamentos_cliente
     ON agendamentos(cliente_id);
+CREATE TABLE IF NOT EXISTS avaliacoes (
+    id TEXT PRIMARY KEY,
+    agendamento_id TEXT NOT NULL UNIQUE,
+    cliente_id TEXT NOT NULL,
+    barbeiro_id TEXT NOT NULL,
+    nota INTEGER NOT NULL CHECK (nota BETWEEN 1 AND 5)
+);
+CREATE INDEX IF NOT EXISTS ix_avaliacoes_barbeiro
+    ON avaliacoes(barbeiro_id);
 """
 
 
