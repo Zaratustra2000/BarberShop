@@ -21,3 +21,7 @@ class Agendamento:
     periodo: Periodo
     preco_centavos: int
     id: str = field(default_factory=novo_id)
+    cancelado: bool = False
+
+    def cancelar(self) -> None:
+        self.cancelado = True
