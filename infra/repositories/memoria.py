@@ -8,6 +8,7 @@ from copy import deepcopy
 from domain.usuario import Papel
 from use_cases.portas import (
     RepositorioDeAgendamentos,
+    RepositorioDeAvaliacoes,
     RepositorioDeBarbearias,
     RepositorioDeServicos,
     RepositorioDeUsuarios,
@@ -107,3 +108,21 @@ class RepositorioDeAgendamentosEmMemoria(RepositorioDeAgendamentos):
         achados = [a for a in self._dados.values() if criterio(a)]
         return [deepcopy(a) for a in
                 sorted(achados, key=lambda a: (a.periodo.inicio, a.id))]
+
+
+class RepositorioDeAvaliacoesEmMemoria(RepositorioDeAvaliacoes):
+    def __init__(self):
+        self._dados = {}
+
+    def salvar(self, avaliacao):
+        self._dados[avaliacao.id] = deepcopy(avaliacao)
+
+    def do_agendamento(self, agendamento_id):
+        achadas = [a for a in self._dados.values()
+                   if a.agendamento_id == agendamento_id]
+        return deepcopy(achadas[0]) if achadas else None
+
+    def do_barbeiro(self, barbeiro_id):
+        achadas = [deepcopy(a) for a in self._dados.values()
+                   if a.barbeiro_id == barbeiro_id]
+        return sorted(achadas, key=lambda a: (a.agendamento_id, a.id))

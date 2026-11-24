@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from domain.agendamento import Agendamento
+from domain.avaliacao import Avaliacao
 from domain.barbearia import Barbearia
 from domain.servico import Servico
 from domain.usuario import Usuario
@@ -96,6 +97,20 @@ class RepositorioDeAgendamentos(ABC):
     @abstractmethod
     def do_cliente(self, cliente_id: str) -> List[Agendamento]:
         """Agendamentos do cliente em ordem cronológica."""
+
+
+class RepositorioDeAvaliacoes(ABC):
+    @abstractmethod
+    def salvar(self, avaliacao: Avaliacao) -> None:
+        ...
+
+    @abstractmethod
+    def do_agendamento(self, agendamento_id: str) -> Optional[Avaliacao]:
+        ...
+
+    @abstractmethod
+    def do_barbeiro(self, barbeiro_id: str) -> List[Avaliacao]:
+        ...
 
 
 class ArmazenamentoDeFotos(ABC):
