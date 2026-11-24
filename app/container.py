@@ -7,6 +7,7 @@ from infra.db.database import BancoSQLite
 from infra.fotos import ArmazenamentoDeFotosLocal
 from infra.repositories import sqlite
 from infra.seguranca import GeradorDeHashWerkzeug, RelogioDoSistema
+from infra.validador_de_fotos import ValidadorDeFotosPillow
 from use_cases.agendar_atendimento import AgendarAtendimento
 from use_cases.autenticar_usuario import AutenticarUsuario
 from use_cases.buscar_barbeiros import BuscarBarbeiros
@@ -42,7 +43,8 @@ class Container:
         agendamentos = sqlite.RepositorioDeAgendamentosSQLite(banco)
         diretório_de_fotos = diretório_de_fotos or "instance/fotos-barbearias"
         self.fotos = ArmazenamentoDeFotosLocal(diretório_de_fotos)
-        self.validar_foto_da_barbearia = ValidarFotoDaBarbearia()
+        self.validar_foto_da_barbearia = ValidarFotoDaBarbearia(
+            ValidadorDeFotosPillow())
 
         self.usuarios = usuarios
         self.cadastrar_barbearia = CadastrarBarbearia(usuarios, barbearias)

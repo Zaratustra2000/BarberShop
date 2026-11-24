@@ -94,6 +94,12 @@ class ArmazenamentoDeFotos(ABC):
         ...
 
 
+class ValidadorDeFotos(ABC):
+    @abstractmethod
+    def validar(self, conteudo: bytes) -> str:
+        ...
+
+
 class GeradorDeHashDeSenha(ABC):
     @abstractmethod
     def gerar(self, senha: str) -> str:

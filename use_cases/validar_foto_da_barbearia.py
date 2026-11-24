@@ -1,29 +1,15 @@
-from io import BytesIO
-
-from PIL import Image, UnidentifiedImageError
-
 from domain.erros import DadosInvalidos
+from use_cases.portas import ValidadorDeFotos
 
 
 LIMITE_DE_FOTO = 5 * 1024 * 1024
 
 
 class ValidarFotoDaBarbearia:
+    def __init__(self, validador: ValidadorDeFotos):
+        self._validador = validador
+
     def executar(self, conteudo: bytes) -> str:
         if len(conteudo) > LIMITE_DE_FOTO:
             raise DadosInvalidos("A imagem deve ter no máximo 5 MB.")
-        try:
-            imagem = Image.open(BytesIO(conteudo))
-            imagem.verify()
-            imagem = Image.open(BytesIO(conteudo))
-            imagem.load()
-        except (UnidentifiedImageError, OSError, SyntaxError,
-                ValueError, Image.DecompressionBombError):
-            raise DadosInvalidos(
-                "Formato inválido. Envie uma imagem JPG, PNG ou WebP.")
-        formatos = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
-        extensao = formatos.get(imagem.format)
-        if extensao is None:
-            raise DadosInvalidos(
-                "Formato inválido. Envie uma imagem JPG, PNG ou WebP.")
-        return extensao
+        return self._validador.validar(conteudo)
