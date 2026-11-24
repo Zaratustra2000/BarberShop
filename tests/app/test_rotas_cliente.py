@@ -83,3 +83,24 @@ def test_cliente_consulta_perfil_da_barbearia(client):
             as_text=True)
     assert "Barbearia Exemplo" in perfil
     assert "/fotos/" in perfil
+
+
+def test_cliente_ve_perfil_do_barbeiro_sem_o_email(client):
+    barbeiro_pronto_para_atender(client)
+
+    cadastrar_e_entrar(client, "barbeiro", nome="Rafa Souza",
+                       email="barbeiro@exemplo.com")
+    client.post("/barbeiro/perfil", data=dict(
+        nome="Rafael Souza",
+        apresentacao="Especialista em cortes clássicos."),
+        follow_redirects=True)
+    sair(client)
+
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+    pagina = client.get("/cliente?nome=rafa").get_data(as_text=True)
+    perfil = extrair(r'href="(/cliente/barbeiros/\w+)"', pagina)
+    pagina = client.get(perfil).get_data(as_text=True)
+
+    assert "Rafael Souza" in pagina
+    assert "Especialista em cortes clássicos." in pagina
+    assert "barbeiro@exemplo.com" not in pagina

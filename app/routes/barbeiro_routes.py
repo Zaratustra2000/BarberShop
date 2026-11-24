@@ -1,8 +1,10 @@
 """Controllers do barbeiro (US3, US4 e agenda da US5)."""
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from app.formatos import ler_data_hora, ler_inteiro, reais_para_centavos
 from app.routes.sessao import container, requer_papel, usuario_id
+from domain.erros import DadosInvalidos
+from use_cases.validar_foto_da_barbearia import LIMITE_DE_FOTO
 
 bp = Blueprint("barbeiro", __name__, url_prefix="/barbeiro")
 
@@ -16,6 +18,43 @@ def painel():
         "barbeiro/painel.html",
         servicos=c.consultar_servicos_do_barbeiro.executar(usuario_id()),
         agenda=visao.agenda.itens, nomes=visao.nomes_dos_clientes)
+
+
+@bp.get("/perfil")
+@requer_papel("barbeiro")
+def perfil():
+    barbeiro = container().usuarios.por_id(usuario_id())
+    return render_template("barbeiro/perfil.html", barbeiro=barbeiro)
+
+
+@bp.post("/perfil")
+@requer_papel("barbeiro")
+def editar_perfil():
+    container().editar_perfil_do_barbeiro.executar(
+        barbeiro_id=usuario_id(),
+        nome=request.form.get("nome", ""),
+        apresentacao=request.form.get("apresentacao", ""))
+    return redirect(url_for("barbeiro.perfil"))
+
+
+@bp.post("/perfil/foto")
+@requer_papel("barbeiro")
+def atualizar_foto_do_perfil():
+    arquivo = request.files.get("foto")
+    if arquivo is None or not arquivo.filename:
+        flash("Envie uma imagem JPG, PNG ou WebP.", "erro")
+        return redirect(url_for("barbeiro.perfil"))
+
+    conteudo = arquivo.read(LIMITE_DE_FOTO + 1)
+    try:
+        extensao = container().validar_foto_do_barbeiro.executar(conteudo)
+    except DadosInvalidos as erro:
+        flash(str(erro), "erro")
+        return redirect(url_for("barbeiro.perfil"))
+
+    container().substituir_foto_do_barbeiro.executar(
+        barbeiro_id=usuario_id(), conteudo=conteudo, extensao=extensao)
+    return redirect(url_for("barbeiro.perfil"))
 
 
 @bp.post("/servicos")

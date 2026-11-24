@@ -24,11 +24,14 @@ from use_cases.consultar_perfil_do_barbeiro import ConsultarPerfilDoBarbeiro
 from use_cases.consultar_perfil_da_barbearia import ConsultarPerfilDaBarbearia
 from use_cases.editar_perfil_da_barbearia import (
     EditarPerfilDaBarbearia, SubstituirFotoPrincipalDaBarbearia)
+from use_cases.editar_perfil_do_barbeiro import (
+    EditarPerfilDoBarbeiro, SubstituirFotoDoBarbeiro)
 from use_cases.editar_horario_ocioso import EditarHorarioOcioso
 from use_cases.gerenciar_barbearia import GerenciarBarbearia
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
 from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
 from use_cases.validar_foto_da_barbearia import ValidarFotoDaBarbearia
+from use_cases.validar_foto_da_barbearia import ValidarFotoDoBarbeiro
 
 
 class Container:
@@ -47,6 +50,8 @@ class Container:
         self.fotos = ArmazenamentoDeFotosLocal(diretório_de_fotos)
         self.validar_foto_da_barbearia = ValidarFotoDaBarbearia(
             ValidadorDeFotosPillow())
+        self.validar_foto_do_barbeiro = ValidarFotoDoBarbeiro(
+            ValidadorDeFotosPillow())
 
         self.usuarios = usuarios
         self.cadastrar_barbearia = CadastrarBarbearia(usuarios, barbearias)
@@ -58,6 +63,9 @@ class Container:
             usuarios, barbearias)
         self.substituir_foto_principal = SubstituirFotoPrincipalDaBarbearia(
             usuarios, barbearias, self.fotos)
+        self.editar_perfil_do_barbeiro = EditarPerfilDoBarbeiro(usuarios)
+        self.substituir_foto_do_barbeiro = SubstituirFotoDoBarbeiro(
+            usuarios, self.fotos)
         self.consultar_perfil_da_barbearia = ConsultarPerfilDaBarbearia(
             barbearias)
         self.publicar_horario_ocioso = PublicarHorarioOcioso(

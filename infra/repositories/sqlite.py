@@ -22,12 +22,16 @@ class RepositorioDeUsuariosSQLite(RepositorioDeUsuarios):
     def salvar(self, usuario):
         with self._banco.conexao() as con:
             con.execute(
-                "INSERT INTO usuarios (id, nome, email, senha_hash, papel) "
-                "VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET "
+                "INSERT INTO usuarios (id, nome, email, senha_hash, papel, "
+                "apresentacao, foto_perfil) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET "
                 "nome = excluded.nome, email = excluded.email, "
-                "senha_hash = excluded.senha_hash, papel = excluded.papel",
+                "senha_hash = excluded.senha_hash, papel = excluded.papel, "
+                "apresentacao = excluded.apresentacao, "
+                "foto_perfil = excluded.foto_perfil",
                 (usuario.id, usuario.nome, usuario.email, usuario.senha_hash,
-                 usuario.papel.value))
+                 usuario.papel.value, usuario.apresentacao,
+                 usuario.foto_perfil))
 
     def por_id(self, usuario_id):
         return self._um("SELECT * FROM usuarios WHERE id = ?", usuario_id)
@@ -55,7 +59,11 @@ class RepositorioDeUsuariosSQLite(RepositorioDeUsuarios):
 def _usuario(linha):
     return Usuario(id=linha["id"], nome=linha["nome"], email=linha["email"],
                    senha_hash=linha["senha_hash"],
-                   papel=Papel(linha["papel"]))
+                   papel=Papel(linha["papel"]),
+                   apresentacao=linha["apresentacao"] if "apresentacao"
+                   in linha.keys() else "",
+                   foto_perfil=linha["foto_perfil"] if "foto_perfil"
+                   in linha.keys() else "")
 
 
 class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):

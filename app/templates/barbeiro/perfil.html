@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Meu perfil{% endblock %}
+{% block conteudo %}
+<h2>Meu perfil</h2>
+
+<article>
+  <form method="post" action="{{ url_for('barbeiro.editar_perfil') }}">
+    <label>Nome de exibição
+      <input name="nome" value="{{ barbeiro.nome }}" required maxlength="100">
+    </label>
+    <label>Apresentação
+      <textarea name="apresentacao" rows="4" maxlength="500">{{ barbeiro.apresentacao }}</textarea>
+    </label>
+    <button type="submit">Salvar perfil</button>
+  </form>
+</article>
+
+<article>
+  <h3>Foto</h3>
+  {% if barbeiro.foto_perfil %}
+  <img src="{{ url_for('foto_da_barbearia', nome_do_arquivo=barbeiro.foto_perfil) }}" alt="Foto de {{ barbeiro.nome }}">
+  {% endif %}
+  <form method="post" action="{{ url_for('barbeiro.atualizar_foto_do_perfil') }}" enctype="multipart/form-data">
+    <label>Arquivo JPG, PNG ou WebP
+      <input type="file" name="foto" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required>
+    </label>
+    <button type="submit">Enviar foto</button>
+  </form>
+</article>
+{% endblock %}

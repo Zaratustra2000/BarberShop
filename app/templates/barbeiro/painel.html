@@ -3,6 +3,7 @@
 {% block conteudo %}
 <h2>Minha agenda</h2>
 <a href="{{ url_for('barbeiro.busca') }}" role="button">Buscar cadeiras ociosas</a>
+<a href="{{ url_for('barbeiro.perfil') }}" role="button" class="secondary">Meu perfil</a>
 
 <h3>Meus blocos de horário</h3>
 {% for item in agenda %}

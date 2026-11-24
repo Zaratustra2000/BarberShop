@@ -13,3 +13,6 @@ class ValidarFotoDaBarbearia:
         if len(conteudo) > LIMITE_DE_FOTO:
             raise DadosInvalidos("A imagem deve ter no máximo 5 MB.")
         return self._validador.validar(conteudo)
+
+
+ValidarFotoDoBarbeiro = ValidarFotoDaBarbearia

@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from tests.app.conftest import cadastrar_e_entrar, extrair
 
 
@@ -82,3 +84,28 @@ def test_barbeiro_consulta_perfil_da_barbearia(client):
             as_text=True)
     assert "Barbearia Exemplo" in perfil
     assert "Sem som alto." in perfil
+
+
+def test_barbeiro_edita_seu_nome_e_apresentacao(client):
+    cadastrar_e_entrar(client, "barbeiro", nome="Rafa")
+
+    pagina = client.post("/barbeiro/perfil", data=dict(
+        nome="Rafael Souza",
+        apresentacao="Especialista em cortes clássicos."),
+        follow_redirects=True).get_data(as_text=True)
+
+    assert "Rafael Souza" in pagina
+    assert "Especialista em cortes clássicos." in pagina
+
+
+def test_barbeiro_envia_foto_do_perfil(client):
+    from tests.app.test_rotas_cliente import png_sintetico
+
+    cadastrar_e_entrar(client, "barbeiro", nome="Rafa")
+    pagina = client.post(
+        "/barbeiro/perfil/foto",
+        data={"foto": (BytesIO(png_sintetico()), "rafa.png")},
+        content_type="multipart/form-data",
+        follow_redirects=True).get_data(as_text=True)
+
+    assert "/fotos/" in pagina

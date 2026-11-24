@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     senha_hash TEXT NOT NULL,
-    papel TEXT NOT NULL
+    papel TEXT NOT NULL,
+    apresentacao TEXT NOT NULL DEFAULT '',
+    foto_perfil TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS barbearias (
     id TEXT PRIMARY KEY,
@@ -113,3 +115,15 @@ class BancoSQLite:
                 con.execute(
                     "ALTER TABLE barbearias "
                     "ADD COLUMN ativa INTEGER NOT NULL DEFAULT 1")
+            colunas = {
+                coluna["name"]
+                for coluna in con.execute("PRAGMA table_info(usuarios)")
+            }
+            if "apresentacao" not in colunas:
+                con.execute(
+                    "ALTER TABLE usuarios "
+                    "ADD COLUMN apresentacao TEXT NOT NULL DEFAULT ''")
+            if "foto_perfil" not in colunas:
+                con.execute(
+                    "ALTER TABLE usuarios "
+                    "ADD COLUMN foto_perfil TEXT NOT NULL DEFAULT ''")
