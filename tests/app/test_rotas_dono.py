@@ -50,6 +50,39 @@ def test_dono_cadastra_barbearia_e_publica_horario_ocioso(client):
     assert "07/01/2030 13:00" in pagina
 
 
+def test_dono_edita_e_exclui_horario_ocioso_sem_blocos(client):
+    cadastrar_e_entrar(client, "dono")
+    criar_barbearia(client)
+    pagina = client.get("/dono").get_data(as_text=True)
+    barbearia_id = extrair(r'/dono/barbearias/(\w+)', pagina)
+    pagina_barbearia = client.get(
+        "/dono/barbearias/{}".format(barbearia_id)).get_data(as_text=True)
+    cadeira_id = extrair(r'<option value="(\w+)">Cadeira 1', pagina_barbearia)
+    pagina = client.post(
+        "/dono/barbearias/{}/horarios".format(barbearia_id),
+        data=dict(cadeira_id=cadeira_id,
+                  inicio="2030-01-07T13:00",
+                  fim="2030-01-07T18:00", preco_por_hora="30,00"),
+        follow_redirects=True).get_data(as_text=True)
+    horario_id = extrair(
+        r'action="/dono/barbearias/{}/horarios/(\w+)/editar"'.format(
+            barbearia_id), pagina)
+
+    pagina = client.post(
+        "/dono/barbearias/{}/horarios/{}/editar".format(
+            barbearia_id, horario_id),
+        data=dict(cadeira_id=cadeira_id, inicio="2030-01-07T14:00",
+                  fim="2030-01-07T17:00", preco_por_hora="45,00"),
+        follow_redirects=True).get_data(as_text=True)
+    assert "R$ 45,00" in pagina
+
+    pagina = client.post(
+        "/dono/barbearias/{}/horarios/{}/excluir".format(
+            barbearia_id, horario_id),
+        follow_redirects=True).get_data(as_text=True)
+    assert "Nenhum horário ocioso publicado." in pagina
+
+
 def test_regra_violada_volta_com_mensagem(client):
     cadastrar_e_entrar(client, "dono")
     pagina = client.post("/dono/barbearias", data=dict(

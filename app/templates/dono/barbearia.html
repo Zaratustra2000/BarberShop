@@ -57,12 +57,31 @@
 
 <h3>Horários ociosos</h3>
 <table>
-  <thead><tr><th>Cadeira</th><th>Início</th><th>Fim</th><th>Preço/hora</th></tr></thead>
+  <thead><tr><th>Cadeira</th><th>Início</th><th>Fim</th><th>Preço/hora</th><th>Ações</th></tr></thead>
   <tbody>
   {% for h in barbearia.horarios_ociosos %}
-    <tr><td>{{ nome_da_cadeira[h.cadeira_id] }}</td><td>{{ h.periodo.inicio|data_hora }}</td><td>{{ h.periodo.fim|data_hora }}</td><td>{{ h.preco_por_hora_centavos|reais }}</td></tr>
+    <tr>
+      <td>{{ nome_da_cadeira[h.cadeira_id] }}</td>
+      <td>{{ h.periodo.inicio|data_hora }}</td>
+      <td>{{ h.periodo.fim|data_hora }}</td>
+      <td>{{ h.preco_por_hora_centavos|reais }}</td>
+      <td>
+        <form method="post" action="/dono/barbearias/{{ barbearia.id }}/horarios/{{ h.id }}/editar" class="inline">
+          <select name="cadeira_id" required>
+            {% for c in barbearia.cadeiras %}<option value="{{ c.id }}" {% if c.id == h.cadeira_id %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}
+          </select>
+          <input type="datetime-local" name="inicio" value="{{ h.periodo.inicio|data_hora_local }}" required>
+          <input type="datetime-local" name="fim" value="{{ h.periodo.fim|data_hora_local }}" required>
+          <input name="preco_por_hora" value="{{ h.preco_por_hora_centavos|reais|replace('R$ ', '')|replace('.', '')|replace(',', '.') }}" required>
+          <button type="submit" class="secondary outline">Editar</button>
+        </form>
+        <form method="post" action="/dono/barbearias/{{ barbearia.id }}/horarios/{{ h.id }}/excluir" class="inline">
+          <button type="submit" class="secondary outline">Excluir</button>
+        </form>
+      </td>
+    </tr>
   {% else %}
-    <tr><td colspan="4">Nenhum horário ocioso publicado.</td></tr>
+    <tr><td colspan="5">Nenhum horário ocioso publicado.</td></tr>
   {% endfor %}
   </tbody>
 </table>

@@ -135,6 +135,47 @@ class Barbearia:
                 return horario
         raise NaoEncontrado("Horário ocioso não encontrado.")
 
+    def editar_horario_ocioso(
+            self, horario_ocioso_id: str, cadeira_id: str, periodo: Periodo,
+            preco_por_hora_centavos: int) -> HorarioOcioso:
+        horario = self.horario_ocioso(horario_ocioso_id)
+        self.cadeira(cadeira_id)
+        if preco_por_hora_centavos <= 0:
+            raise DadosInvalidos("O preço por hora precisa ser positivo.")
+        blocos = [bloco for bloco in self.blocos
+                  if bloco.horario_ocioso_id == horario.id]
+        for bloco in blocos:
+            if not periodo.contem(bloco.periodo):
+                raise DadosInvalidos(
+                    "Os blocos precisam continuar dentro do horário ocioso.")
+        for existente in self.horarios_ociosos:
+            if (existente.id != horario.id
+                    and existente.cadeira_id == cadeira_id
+                    and existente.periodo.sobrepoe(periodo)):
+                raise ConflitoDeHorario(
+                    "Esta cadeira já tem um horário ocioso nesse período.")
+        for bloco in blocos:
+            for outro in self.blocos:
+                if (outro.horario_ocioso_id != horario.id
+                        and outro.cadeira_id == cadeira_id
+                        and outro.periodo.sobrepoe(bloco.periodo)):
+                    raise ConflitoDeHorario(
+                        "Esta cadeira já tem um bloco reservado "
+                        "nesse período.")
+        horario.cadeira_id = cadeira_id
+        horario.periodo = periodo
+        horario.preco_por_hora_centavos = preco_por_hora_centavos
+        for bloco in blocos:
+            bloco.cadeira_id = cadeira_id
+        return horario
+
+    def excluir_horario_ocioso(self, horario_ocioso_id: str) -> None:
+        horario = self.horario_ocioso(horario_ocioso_id)
+        if any(bloco.horario_ocioso_id == horario.id for bloco in self.blocos):
+            raise ConflitoDeHorario(
+                "Não é possível excluir um horário ocioso com blocos.")
+        self.horarios_ociosos.remove(horario)
+
     def periodos_livres(self, horario_ocioso_id: str) -> List[Periodo]:
         horario = self.horario_ocioso(horario_ocioso_id)
         return horario.periodo.subtrair(

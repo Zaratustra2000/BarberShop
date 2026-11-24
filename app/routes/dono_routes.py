@@ -65,6 +65,30 @@ def publicar_horario(barbearia_id):
     return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
 
 
+@bp.post("/barbearias/<barbearia_id>/horarios/<horario_ocioso_id>/editar")
+@requer_papel("dono")
+def editar_horario(barbearia_id, horario_ocioso_id):
+    form = request.form
+    container().editar_horario_ocioso.executar(
+        dono_id=usuario_id(), barbearia_id=barbearia_id,
+        horario_ocioso_id=horario_ocioso_id,
+        cadeira_id=form.get("cadeira_id", ""),
+        inicio=ler_data_hora(form.get("inicio")),
+        fim=ler_data_hora(form.get("fim")),
+        preco_por_hora_centavos=reais_para_centavos(
+            form.get("preco_por_hora", "")))
+    return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
+
+
+@bp.post("/barbearias/<barbearia_id>/horarios/<horario_ocioso_id>/excluir")
+@requer_papel("dono")
+def excluir_horario(barbearia_id, horario_ocioso_id):
+    container().editar_horario_ocioso.excluir(
+        dono_id=usuario_id(), barbearia_id=barbearia_id,
+        horario_ocioso_id=horario_ocioso_id)
+    return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
+
+
 @bp.post("/barbearias/<barbearia_id>/perfil")
 @requer_papel("dono")
 def editar_perfil(barbearia_id):

@@ -24,6 +24,7 @@ from use_cases.consultar_perfil_do_barbeiro import ConsultarPerfilDoBarbeiro
 from use_cases.consultar_perfil_da_barbearia import ConsultarPerfilDaBarbearia
 from use_cases.editar_perfil_da_barbearia import (
     EditarPerfilDaBarbearia, SubstituirFotoPrincipalDaBarbearia)
+from use_cases.editar_horario_ocioso import EditarHorarioOcioso
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
 from use_cases.reservar_bloco_de_horario import ReservarBlocoDeHorario
 from use_cases.validar_foto_da_barbearia import ValidarFotoDaBarbearia
@@ -58,6 +59,8 @@ class Container:
             barbearias)
         self.publicar_horario_ocioso = PublicarHorarioOcioso(
             barbearias, self.relogio)
+        self.editar_horario_ocioso = EditarHorarioOcioso(
+            usuarios, barbearias, self.relogio)
         self.cadastrar_servico = CadastrarServico(usuarios, servicos)
         self.consultar_servicos_do_barbeiro = ConsultarServicosDoBarbeiro(
             servicos)

@@ -76,3 +76,32 @@ def test_remover_cadeira_sem_referencias(repos):
     barbearias.salvar(b)
     salva = barbearias.por_id(b.id)
     assert [c.nome for c in salva.cadeiras] == ["Cadeira 1"]
+
+
+def test_editar_horario_ocioso_persiste_alteracoes(repos):
+    barbearias = repos["barbearias"]
+    b = nova_barbearia()
+    horario = b.horarios_ociosos[0]
+    barbearias.salvar(b)
+
+    b.editar_horario_ocioso(
+        horario.id, horario.cadeira_id,
+        Periodo(datetime(2030, 1, 7, 14), datetime(2030, 1, 7, 16)), 4500)
+    barbearias.salvar(b)
+
+    salvo = barbearias.por_id(b.id).horario_ocioso(horario.id)
+    assert salvo.periodo == Periodo(
+        datetime(2030, 1, 7, 14), datetime(2030, 1, 7, 16))
+    assert salvo.preco_por_hora_centavos == 4500
+
+
+def test_excluir_horario_ocioso_persiste_remocao(repos):
+    barbearias = repos["barbearias"]
+    b = nova_barbearia()
+    horario = b.horarios_ociosos[0]
+    barbearias.salvar(b)
+
+    b.excluir_horario_ocioso(horario.id)
+    barbearias.salvar(b)
+
+    assert barbearias.por_id(b.id).horarios_ociosos == []

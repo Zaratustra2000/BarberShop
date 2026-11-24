@@ -99,17 +99,52 @@ class RepositorioDeBarbeariasSQLite(RepositorioDeBarbearias):
                 "posicao = excluded.posicao, nome = excluded.nome",
                 [(c.id, barbearia.id, posicao, c.nome)
                  for posicao, c in enumerate(barbearia.cadeiras)])
+            ids_blocos = [b.id for b in barbearia.blocos]
+            if ids_blocos:
+                placeholders = ",".join("?" for _ in ids_blocos)
+                con.execute(
+                    "DELETE FROM blocos WHERE barbearia_id = ? "
+                    "AND id NOT IN ({})".format(placeholders),
+                    (barbearia.id, *ids_blocos))
+            else:
+                con.execute(
+                    "DELETE FROM blocos WHERE barbearia_id = ?",
+                    (barbearia.id,))
+            ids_horarios = [h.id for h in barbearia.horarios_ociosos]
+            if ids_horarios:
+                placeholders = ",".join("?" for _ in ids_horarios)
+                con.execute(
+                    "DELETE FROM horarios_ociosos WHERE barbearia_id = ? "
+                    "AND id NOT IN ({})".format(placeholders),
+                    (barbearia.id, *ids_horarios))
+            else:
+                con.execute(
+                    "DELETE FROM horarios_ociosos WHERE barbearia_id = ?",
+                    (barbearia.id,))
             con.executemany(
-                "INSERT OR IGNORE INTO horarios_ociosos (id, barbearia_id, "
+                "INSERT INTO horarios_ociosos (id, barbearia_id, "
                 "cadeira_id, inicio, fim, preco_por_hora_centavos) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
+                "VALUES (?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET "
+                "barbearia_id = excluded.barbearia_id, "
+                "cadeira_id = excluded.cadeira_id, "
+                "inicio = excluded.inicio, fim = excluded.fim, "
+                "preco_por_hora_centavos = "
+                "excluded.preco_por_hora_centavos",
                 [(h.id, barbearia.id, h.cadeira_id, _data(h.periodo.inicio),
                   _data(h.periodo.fim), h.preco_por_hora_centavos)
                  for h in barbearia.horarios_ociosos])
             con.executemany(
-                "INSERT OR IGNORE INTO blocos (id, barbearia_id, "
+                "INSERT INTO blocos (id, barbearia_id, "
                 "horario_ocioso_id, cadeira_id, barbeiro_id, inicio, fim, "
-                "valor_centavos) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "valor_centavos) VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET "
+                "barbearia_id = excluded.barbearia_id, "
+                "horario_ocioso_id = excluded.horario_ocioso_id, "
+                "cadeira_id = excluded.cadeira_id, "
+                "barbeiro_id = excluded.barbeiro_id, "
+                "inicio = excluded.inicio, fim = excluded.fim, "
+                "valor_centavos = excluded.valor_centavos",
                 [(b.id, barbearia.id, b.horario_ocioso_id, b.cadeira_id,
                   b.barbeiro_id, _data(b.periodo.inicio),
                   _data(b.periodo.fim), b.valor_centavos)

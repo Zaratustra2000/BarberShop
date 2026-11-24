@@ -3,10 +3,12 @@ from datetime import datetime
 
 import pytest
 
-from domain.erros import AcessoNegado, DadosInvalidos
+from domain.erros import (AcessoNegado, ConflitoDeHorario, DadosInvalidos)
+from domain.periodo import Periodo
 from use_cases.cadastrar_barbearia import CadastrarBarbearia
 from use_cases.consultar_barbearias_do_dono import ConsultarBarbeariasDoDono
 from use_cases.editar_perfil_da_barbearia import EditarPerfilDaBarbearia
+from use_cases.editar_horario_ocioso import EditarHorarioOcioso
 from use_cases.publicar_horario_ocioso import PublicarHorarioOcioso
 
 
@@ -118,3 +120,79 @@ def test_dono_remove_cadeira_sem_referencias(ctx):
         cadeira_id=cadeira.id)
     salva = ctx.barbearias.por_id(barbearia.id)
     assert [c.nome for c in salva.cadeiras] == ["Cadeira 1"]
+
+
+def test_dono_edita_horario_ocioso_e_fica_salvo(ctx):
+    dono = ctx.cadastrar("dono")
+    barbearia = cadastrar_barbearia(ctx, dono)
+    horario = publicar(ctx, dono, barbearia,
+                       datetime(2030, 1, 7, 13),
+                       datetime(2030, 1, 7, 18))
+
+    EditarHorarioOcioso(
+        ctx.usuarios, ctx.barbearias, ctx.relogio).executar(
+            dono_id=dono.id, barbearia_id=barbearia.id,
+            horario_ocioso_id=horario.id,
+            cadeira_id=barbearia.cadeiras[0].id,
+            inicio=datetime(2030, 1, 7, 14),
+            fim=datetime(2030, 1, 7, 17),
+            preco_por_hora_centavos=4500)
+
+    salvo = ctx.barbearias.por_id(barbearia.id).horario_ocioso(horario.id)
+    assert salvo.periodo == Periodo(
+        datetime(2030, 1, 7, 14), datetime(2030, 1, 7, 17))
+    assert salvo.preco_por_hora_centavos == 4500
+
+
+def test_outro_dono_nao_edita_horario_ocioso(ctx):
+    dono = ctx.cadastrar("dono", email="dono@exemplo.com")
+    intruso = ctx.cadastrar("dono", email="intruso@exemplo.com")
+    barbearia = cadastrar_barbearia(ctx, dono)
+    horario = publicar(ctx, dono, barbearia,
+                       datetime(2030, 1, 7, 13),
+                       datetime(2030, 1, 7, 18))
+
+    with pytest.raises(AcessoNegado):
+        EditarHorarioOcioso(
+            ctx.usuarios, ctx.barbearias, ctx.relogio).executar(
+                dono_id=intruso.id, barbearia_id=barbearia.id,
+                horario_ocioso_id=horario.id,
+                cadeira_id=barbearia.cadeiras[0].id,
+                inicio=datetime(2030, 1, 7, 14),
+                fim=datetime(2030, 1, 7, 17),
+                preco_por_hora_centavos=4500)
+
+
+def test_dono_exclui_horario_ocioso_sem_blocos(ctx):
+    dono = ctx.cadastrar("dono")
+    barbearia = cadastrar_barbearia(ctx, dono)
+    horario = publicar(ctx, dono, barbearia,
+                       datetime(2030, 1, 7, 13),
+                       datetime(2030, 1, 7, 18))
+
+    EditarHorarioOcioso(
+        ctx.usuarios, ctx.barbearias, ctx.relogio).excluir(
+            dono_id=dono.id, barbearia_id=barbearia.id,
+            horario_ocioso_id=horario.id)
+
+    salva = ctx.barbearias.por_id(barbearia.id)
+    assert salva.horarios_ociosos == []
+
+
+def test_dono_nao_exclui_horario_ocioso_com_bloco(ctx):
+    dono = ctx.cadastrar("dono")
+    barbearia = cadastrar_barbearia(ctx, dono)
+    horario = publicar(ctx, dono, barbearia,
+                       datetime(2030, 1, 7, 13),
+                       datetime(2030, 1, 7, 18))
+    salva = ctx.barbearias.por_id(barbearia.id)
+    salva.reservar_bloco(
+        horario.id, "barbeiro-1", Periodo(
+            datetime(2030, 1, 7, 14), datetime(2030, 1, 7, 15)))
+    ctx.barbearias.salvar(salva)
+
+    with pytest.raises(ConflitoDeHorario):
+        EditarHorarioOcioso(
+            ctx.usuarios, ctx.barbearias, ctx.relogio).excluir(
+                dono_id=dono.id, barbearia_id=barbearia.id,
+                horario_ocioso_id=horario.id)
