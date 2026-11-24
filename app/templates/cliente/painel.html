@@ -3,18 +3,30 @@
 {% block conteudo %}
 <h2>Encontre seu barbeiro de confiança</h2>
 <form method="get" role="search">
-  <input name="nome" value="{{ nome }}" placeholder="Nome do barbeiro" required>
+  <input name="nome" value="{{ nome }}" placeholder="Nome do barbeiro">
   <button type="submit">Buscar</button>
 </form>
-{% if nome %}
-  <ul>
-  {% for b in barbeiros %}
-    <li><a href="/cliente/barbeiros/{{ b.id }}">{{ b.nome }}</a></li>
+<ul>
+{% for resultado in barbeiros %}
+  {% set b = resultado.barbeiro %}
+  <li>
+    <a href="/cliente/barbeiros/{{ b.id }}">{{ b.nome }}</a>
+    {% if not resultado.tem_servico %}
+      <br><small>Este barbeiro ainda não tem Serviços cadastrados.</small>
+    {% elif not resultado.tem_horario %}
+      <br><small>Este barbeiro ainda não tem horário para receber Agendamentos.</small>
+    {% else %}
+      <br><small>Pode receber Agendamentos.</small>
+    {% endif %}
+  </li>
   {% else %}
+  {% if nome %}
     <li>Nenhum barbeiro com “{{ nome }}” no nome.</li>
-  {% endfor %}
-  </ul>
-{% endif %}
+  {% else %}
+    <li>Nenhum barbeiro cadastrado.</li>
+  {% endif %}
+{% endfor %}
+</ul>
 
 <h2>Meus agendamentos</h2>
 <table>

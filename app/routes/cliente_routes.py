@@ -12,9 +12,25 @@ bp = Blueprint("cliente", __name__, url_prefix="/cliente")
 def painel():
     c = container()
     nome = request.args.get("nome", "").strip()
+    barbeiros = c.buscar_barbeiros.executar(nome)
+    resultados = []
+    for barbeiro in barbeiros:
+        perfil = c.consultar_perfil_do_barbeiro.executar(barbeiro.id)
+        tem_horario = False
+        for servico in perfil.servicos:
+            perfil_com_servico = c.consultar_perfil_do_barbeiro.executar(
+                barbeiro.id, servico.id)
+            if perfil_com_servico.horarios:
+                tem_horario = True
+                break
+        resultados.append({
+            "barbeiro": barbeiro,
+            "tem_servico": bool(perfil.servicos),
+            "tem_horario": tem_horario,
+        })
     return render_template(
         "cliente/painel.html", nome=nome,
-        barbeiros=c.buscar_barbeiros.executar(nome) if nome else [],
+        barbeiros=resultados,
         agendamentos=c.consultar_agendamentos_do_cliente.executar(
             usuario_id()))
 

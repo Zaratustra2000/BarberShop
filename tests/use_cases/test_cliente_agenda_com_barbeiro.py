@@ -42,6 +42,39 @@ def test_cliente_encontra_o_barbeiro_pelo_nome(ctx, cenario):
     assert [b.nome for b in achados] == ["Rafa Souza"]
 
 
+def test_cliente_lista_todos_os_barbeiros_sem_nome_de_busca(ctx, cenario):
+    ctx.cadastrar("barbeiro", nome="Bruno Costa", email="bruno@exemplo.com")
+    ctx.cadastrar("cliente", nome="Rafa Cliente",
+                  email="rafa-cliente@exemplo.com")
+    ctx.cadastrar("dono", nome="Rafa Dono", email="rafa-dono@exemplo.com")
+
+    achados = BuscarBarbeiros(ctx.usuarios).executar("")
+
+    assert [b.nome for b in achados] == ["Bruno Costa", "Rafa Souza"]
+
+
+def test_cliente_recebe_estado_vazio_quando_o_filtro_nao_encontra(ctx):
+    ctx.cadastrar("barbeiro", nome="Rafa Souza")
+
+    assert BuscarBarbeiros(ctx.usuarios).executar("Bruno") == []
+
+
+def test_cliente_recebe_estado_vazio_sem_barbeiros_cadastrados(ctx):
+    assert BuscarBarbeiros(ctx.usuarios).executar("") == []
+
+
+def test_barbeiro_sem_horario_pode_abrir_perfil(ctx):
+    rafa = ctx.cadastrar("barbeiro", nome="Rafa Souza")
+    cadastrar_servico(ctx, rafa, "Corte", 4500, 40)
+
+    perfil = ConsultarPerfilDoBarbeiro(
+        ctx.usuarios, ctx.barbearias, ctx.servicos, ctx.agendamentos,
+        ctx.relogio).executar(rafa.id)
+
+    assert perfil.servicos
+    assert perfil.proximos_locais == []
+
+
 def test_perfil_mostra_onde_o_barbeiro_atende_e_os_horarios(ctx, cenario):
     perfil = ConsultarPerfilDoBarbeiro(
         ctx.usuarios, ctx.barbearias, ctx.servicos, ctx.agendamentos,

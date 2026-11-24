@@ -35,11 +35,55 @@ def barbeiro_pronto_para_atender(client):
     sair(client)
 
 
+def test_cliente_lista_barbeiros_sem_informar_nome(client):
+    cadastrar_e_entrar(client, "barbeiro", nome="Rafa Souza")
+    sair(client)
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+
+    pagina = client.get("/cliente").get_data(as_text=True)
+
+    assert "Rafa Souza" in pagina
+    assert 'name="nome"' in pagina
+    assert "ainda não tem Serviços cadastrados" in pagina
+
+
+def test_cliente_ve_estado_vazio_quando_o_filtro_nao_encontra(client):
+    cadastrar_e_entrar(client, "barbeiro", nome="Rafa Souza")
+    sair(client)
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+
+    pagina = client.get("/cliente?nome=Bruno").get_data(as_text=True)
+
+    assert "Nenhum barbeiro com “Bruno” no nome." in pagina
+
+
+def test_cliente_ve_estado_vazio_sem_barbeiros_cadastrados(client):
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+
+    pagina = client.get("/cliente").get_data(as_text=True)
+
+    assert "Nenhum barbeiro cadastrado." in pagina
+
+
+def test_cliente_ve_barbeiro_com_servico_sem_horario(client):
+    cadastrar_e_entrar(client, "barbeiro", nome="Rafa Souza")
+    client.post("/barbeiro/servicos", data=dict(
+        nome="Corte", preco="45,00", duracao_minutos="40"))
+    sair(client)
+    cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
+
+    pagina = client.get("/cliente").get_data(as_text=True)
+
+    assert "Rafa Souza" in pagina
+    assert "ainda não tem horário para receber Agendamentos" in pagina
+
+
 def test_cliente_acha_o_barbeiro_e_agenda(client):
     barbeiro_pronto_para_atender(client)
     cadastrar_e_entrar(client, "cliente", nome="Lucas Andrade")
 
     pagina = client.get("/cliente?nome=rafa").get_data(as_text=True)
+    assert "Pode receber Agendamentos." in pagina
     perfil = extrair(r'href="(/cliente/barbeiros/\w+)"', pagina)
     pagina = client.get(perfil).get_data(as_text=True)
     assert "Barbearia Exemplo" in pagina
