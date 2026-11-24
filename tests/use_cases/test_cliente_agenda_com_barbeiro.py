@@ -13,6 +13,7 @@ from use_cases.consultar_agenda_do_barbeiro import ConsultarAgendaDoBarbeiro
 from use_cases.consultar_agendamentos_do_cliente import (
     ConsultarAgendamentosDoCliente)
 from use_cases.consultar_perfil_do_barbeiro import ConsultarPerfilDoBarbeiro
+from use_cases.cancelar_agendamento import CancelarAgendamento
 
 
 def h(hora, minuto=0, dia=7):
@@ -108,6 +109,22 @@ def test_dois_clientes_nao_pegam_o_mesmo_horario(ctx, cenario):
     outro = ctx.cadastrar("cliente", email="outro@exemplo.com")
     with pytest.raises(ConflitoDeHorario):
         agendar(ctx, outro, cenario["corte"], h(14, 20))
+
+
+def test_barbeiro_cancela_agendamento_futuro_e_horario_fica_disponivel(
+        ctx, cenario):
+    agendamento = agendar(
+        ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+
+    CancelarAgendamento(
+        ctx.usuarios, ctx.agendamentos, ctx.relogio).executar(
+        cenario["rafa"].id, agendamento.id)
+
+    cancelado, = ctx.agendamentos.do_cliente(cenario["lucas"].id)
+    assert cancelado.cancelado
+    outro = ctx.cadastrar("cliente", email="outro@exemplo.com")
+    novo = agendar(ctx, outro, cenario["corte"], h(14, 30))
+    assert novo.cliente_id == outro.id
 
 
 def test_agendamento_no_passado_e_recusado(ctx, cenario):
