@@ -177,6 +177,24 @@ def test_cliente_avalia_agendamento_terminado_e_altera_a_nota(ctx, cenario):
     assert ctx.avaliacoes.do_agendamento(agendamento.id).nota == 5
 
 
+def test_perfil_agrega_media_e_quantidade_validas(ctx, cenario):
+    primeiro = agendar(ctx, cenario["lucas"], cenario["corte"], h(14, 30))
+    segundo_cliente = ctx.cadastrar("cliente", email="segundo@exemplo.com")
+    segundo = agendar(ctx, segundo_cliente, cenario["corte"], h(15, 20))
+    ctx.relogio.ajustar(h(16, 1))
+    caso = AvaliarAgendamento(
+        ctx.usuarios, ctx.agendamentos, ctx.avaliacoes, ctx.relogio)
+    caso.executar(cenario["lucas"].id, primeiro.id, 5)
+    caso.executar(segundo_cliente.id, segundo.id, 3)
+
+    perfil = ConsultarPerfilDoBarbeiro(
+        ctx.usuarios, ctx.barbearias, ctx.servicos, ctx.agendamentos,
+        ctx.relogio, ctx.avaliacoes).executar(cenario["rafa"].id)
+
+    assert perfil.media_avaliacoes == 4
+    assert perfil.quantidade_avaliacoes == 2
+
+
 def test_barbeiro_nao_agenda_como_cliente(ctx, cenario):
     with pytest.raises(AcessoNegado):
         agendar(ctx, cenario["rafa"], cenario["corte"], h(14))
