@@ -18,3 +18,6 @@ class RelogioFixo(Relogio):
 
     def agora(self):
         return self._agora
+
+    def ajustar(self, agora):
+        self._agora = agora

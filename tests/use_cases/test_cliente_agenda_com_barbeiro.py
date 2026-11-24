@@ -78,7 +78,7 @@ def test_dois_clientes_nao_pegam_o_mesmo_horario(ctx, cenario):
 
 
 def test_agendamento_no_passado_e_recusado(ctx, cenario):
-    ctx.relogio._agora = h(15, dia=7)
+    ctx.relogio.ajustar(h(15, dia=7))
     with pytest.raises(DadosInvalidos):
         agendar(ctx, cenario["lucas"], cenario["corte"], h(14))
 

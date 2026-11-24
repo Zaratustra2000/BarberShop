@@ -92,7 +92,7 @@ def test_barbeiro_nao_reserva_dois_blocos_sobrepostos_em_barbearias(ctx):
 
 def test_bloco_que_ja_comecou_e_recusado(ctx):
     barbearia, horario = barbearia_com_horario(ctx, h(6, 8), h(6, 18))
-    ctx.relogio._agora = h(6, 10)
+    ctx.relogio.ajustar(h(6, 10))
     with pytest.raises(DadosInvalidos):
         reservar(ctx, ctx.cadastrar("barbeiro"), barbearia, horario,
                  h(6, 9), h(6, 11))
