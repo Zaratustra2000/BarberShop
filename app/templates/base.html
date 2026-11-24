@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}BarberShop{% endblock %} · BarberShop</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul><li><a href="{{ url_for('auth.inicio') }}"><strong>💈 BarberShop</strong></a></li></ul>
+      <ul>
+        {% if session.get('usuario_id') %}
+          <li><small>{{ session['nome'] }} · {{ session['papel'] }}</small></li>
+          <li>
+            <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+              <button type="submit" class="secondary outline">Sair</button>
+            </form>
+          </li>
+        {% else %}
+          <li><a href="{{ url_for('auth.login') }}">Entrar</a></li>
+          <li><a href="{{ url_for('auth.cadastro') }}" role="button">Criar conta</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    {% for categoria, mensagem in get_flashed_messages(with_categories=true) %}
+      <p class="aviso aviso-{{ categoria }}" role="alert">{{ mensagem }}</p>
+    {% endfor %}
+    {% block conteudo %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

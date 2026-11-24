@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<hgroup>
+  <h1>Cadeiras ociosas viram faturamento.</h1>
+  <p>Barbearias alugam cadeiras por bloco de horário, barbeiros autônomos atendem onde quiserem e clientes agendam com o barbeiro de confiança.</p>
+</hgroup>
+<div class="grid">
+  <article><h3>💈 Dono</h3><p>Publique os horários ociosos das suas cadeiras com preço por hora.</p></article>
+  <article><h3>✂️ Barbeiro</h3><p>Encontre cadeiras no mapa e reserve blocos de horário pagando menos taxa.</p></article>
+  <article><h3>🧔 Cliente</h3><p>Siga seu barbeiro de confiança e agende onde ele estiver atendendo.</p></article>
+</div>
+<a href="{{ url_for('auth.cadastro') }}" role="button">Começar</a>
+{% endblock %}

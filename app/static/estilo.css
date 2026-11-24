@@ -1,0 +1,9 @@
+.inline { display: inline; margin: 0; }
+.inline button { margin: 0; padding: .25rem .75rem; }
+.estreito { max-width: 32rem; margin-inline: auto; }
+.aviso { padding: .75rem 1rem; border-radius: var(--pico-border-radius); }
+.aviso-erro { background: #fde8e8; color: #8a1c1c; }
+.aviso-ok { background: #e6f6ea; color: #1d5e2c; }
+.mapa { height: 320px; border-radius: var(--pico-border-radius); margin-bottom: 1rem; }
+.livre { color: #1d5e2c; }
+table td form { margin: 0; }
