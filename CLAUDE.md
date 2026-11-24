@@ -14,3 +14,16 @@
 - Use dados sintéticos em testes e seeds. Nunca coloque segredos no código: a
   `SECRET_KEY` vem de variável de ambiente.
 - Antes de concluir: `.venv/bin/pytest` e `.venv/bin/flake8` precisam passar.
+- Depois que uma implementação estiver completa e verificada, marque todas as
+  caixas de status do ticket em `.scratch/` como `[x]` e altere seu status para
+  `done`. Faça o commit da atualização do ticket no branch atual.
+
+## Agent skills
+
+### Issue tracker
+
+Issues e specs ficam como Markdown em `.scratch/`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Layout single-context: `GLOSSARY.md` e `docs/adr/` na raiz. See `docs/agents/domain.md`.
