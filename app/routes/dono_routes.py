@@ -98,16 +98,9 @@ def atualizar_foto(barbearia_id):
         return redirect(url_for("dono.barbearia",
                                 barbearia_id=barbearia_id))
 
-    anterior = container().consultar_barbearias_do_dono.uma(
-        usuario_id(), barbearia_id)
-    nome_gerado = container().fotos.salvar(conteudo, extensao)
-
-    container().editar_perfil_da_barbearia.atualizar_foto_principal(
+    container().substituir_foto_principal.executar(
         dono_id=usuario_id(), barbearia_id=barbearia_id,
-        nome_do_arquivo=nome_gerado)
-
-    if anterior.foto_principal:
-        container().fotos.remover(anterior.foto_principal)
+        conteudo=conteudo, extensao=extensao)
 
     return redirect(url_for("dono.barbearia", barbearia_id=barbearia_id))
 

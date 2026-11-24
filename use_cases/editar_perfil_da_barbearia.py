@@ -2,7 +2,8 @@ from domain.erros import DadosInvalidos
 from domain.usuario import Papel
 from use_cases.acesso import exigir_usuario
 from use_cases.consultar_barbearias_do_dono import barbearia_do_dono
-from use_cases.portas import RepositorioDeBarbearias, RepositorioDeUsuarios
+from use_cases.portas import (ArmazenamentoDeFotos, RepositorioDeBarbearias,
+                              RepositorioDeUsuarios)
 
 MAXIMO_DE_CADEIRAS = 30
 
@@ -47,4 +48,26 @@ class EditarPerfilDaBarbearia:
             self._barbearias, dono_id, barbearia_id)
         barbearia.definir_foto_principal(nome_do_arquivo)
         self._barbearias.salvar(barbearia)
+        return barbearia
+
+
+class SubstituirFotoPrincipalDaBarbearia:
+    def __init__(self, usuarios: RepositorioDeUsuarios,
+                 barbearias: RepositorioDeBarbearias,
+                 fotos: ArmazenamentoDeFotos):
+        self._usuarios = usuarios
+        self._barbearias = barbearias
+        self._fotos = fotos
+
+    def executar(self, dono_id: str, barbearia_id: str,
+                 conteudo: bytes, extensao: str):
+        exigir_usuario(self._usuarios, dono_id, Papel.DONO)
+        barbearia = barbearia_do_dono(
+            self._barbearias, dono_id, barbearia_id)
+        foto_anterior = barbearia.foto_principal
+        nome_gerado = self._fotos.salvar(conteudo, extensao)
+        barbearia.definir_foto_principal(nome_gerado)
+        self._barbearias.salvar(barbearia)
+        if foto_anterior:
+            self._fotos.remover(foto_anterior)
         return barbearia

@@ -15,8 +15,10 @@ class ValidarFotoDaBarbearia:
         try:
             imagem = Image.open(BytesIO(conteudo))
             imagem.verify()
+            imagem = Image.open(BytesIO(conteudo))
+            imagem.load()
         except (UnidentifiedImageError, OSError, SyntaxError,
-                Image.DecompressionBombError):
+                ValueError, Image.DecompressionBombError):
             raise DadosInvalidos(
                 "Formato inválido. Envie uma imagem JPG, PNG ou WebP.")
         formatos = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp"}
