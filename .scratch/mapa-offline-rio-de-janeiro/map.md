@@ -14,6 +14,7 @@
 - Armazenamento: arquivos estáticos da aplicação.
 - Licença: atribuição completa a OpenStreetMap e ODbL.
 - Pan limitado ao município e zoom máximo em 16.
+- Verificação manual concluída em navegador em 2026-11-24.
 
 ## Fog
 

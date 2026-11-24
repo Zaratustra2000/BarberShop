@@ -66,16 +66,17 @@ casos de uso ou dependências da aplicação ao renovar os tiles.
 
 Execute em um navegador com acesso à rede bloqueado para tiles externos.
 
-- [ ] Abra o cadastro de uma Barbearia e confirme a seleção por clique.
-- [ ] Clique uma segunda vez e confirme que o mesmo marcador é movido.
-- [ ] Aproxime e afaste o mapa; confirme zoom mínimo 10 e máximo 16.
-- [ ] Arraste o mapa para os limites municipais; confirme que o pan não sai da
+- [x] Abra o cadastro de uma Barbearia e confirme a seleção por clique.
+- [x] Clique uma segunda vez e confirme que o mesmo marcador é movido.
+- [x] Aproxime e afaste o mapa; confirme zoom mínimo 10 e máximo 16.
+- [x] Arraste o mapa para os limites municipais; confirme que o pan não sai da
   cobertura municipal.
-- [ ] Abra a busca do Barbeiro e o perfil do Cliente; confirme marcadores,
+- [x] Abra a busca do Barbeiro e o perfil do Cliente; confirme marcadores,
   popups e ajuste automático aos limites.
-- [ ] Confirme os links visíveis de atribuição OpenStreetMap e ODbL.
-- [ ] No DevTools Network, confirme que não há requisições a tile servers
+- [x] Confirme os links visíveis de atribuição OpenStreetMap e ODbL.
+- [x] No DevTools Network, confirme que não há requisições a tile servers
   externos.
 
-**Status desta entrega:** o registro e o procedimento estão prontos; a execução
-visual em um navegador real fica pendente até que seja realizada manualmente.
+**Status da verificação:** concluída em navegador em 2026-11-24. Foram
+confirmados pan, zoom, seleção, movimento do marcador, marcadores, popups,
+atribuição e ausência de requisições a tile servers externos.
