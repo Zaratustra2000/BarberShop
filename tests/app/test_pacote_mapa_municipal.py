@@ -18,11 +18,18 @@ def test_pacote_municipal_tem_metadados_e_tiles_leaflet():
     assert metadados["zoom_minimo"] == 10
     assert metadados["zoom_maximo"] == 16
     assert metadados["url"] == "/static/basemap/rio-de-janeiro/{z}/{x}/{y}.png"
-    assert (RAIZ_PACOTE / "10" / "387" / "578.png").is_file()
-    assert (RAIZ_PACOTE / "16").is_dir()
 
     assert "http://" not in metadados["url"]
     assert "https://" not in metadados["url"]
+
+    for zoom in range(metadados["zoom_minimo"], metadados["zoom_maximo"] + 1):
+        x_minimo, y_minimo = coordenada_tile(-43.795, -22.746, zoom)
+        x_maximo, y_maximo = coordenada_tile(-43.099, -23.082, zoom)
+        for x in range(x_minimo, x_maximo + 1):
+            for y in range(y_minimo, y_maximo + 1):
+                tile = RAIZ_PACOTE / str(zoom) / str(x) / f"{y}.png"
+                assert tile.is_file()
+                assert tile.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
 
 
 def test_pacote_municipal_declara_atribuicao_odbl():
