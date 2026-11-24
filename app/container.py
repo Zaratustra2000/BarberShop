@@ -9,6 +9,7 @@ from infra.repositories import sqlite
 from infra.seguranca import GeradorDeHashWerkzeug, RelogioDoSistema
 from infra.validador_de_fotos import ValidadorDeFotosPillow
 from use_cases.agendar_atendimento import AgendarAtendimento
+from use_cases.cancelar_agendamento import CancelarAgendamento
 from use_cases.autenticar_usuario import AutenticarUsuario
 from use_cases.buscar_barbeiros import BuscarBarbeiros
 from use_cases.buscar_cadeiras_ociosas import BuscarCadeirasOciosas
@@ -86,6 +87,8 @@ class Container:
             usuarios, barbearias, servicos, agendamentos, self.relogio)
         self.agendar_atendimento = AgendarAtendimento(
             usuarios, barbearias, servicos, agendamentos, self.relogio)
+        self.cancelar_agendamento = CancelarAgendamento(
+            usuarios, agendamentos, self.relogio)
         self.consultar_agendamentos_do_cliente = (
             ConsultarAgendamentosDoCliente(usuarios, barbearias,
                                            agendamentos))

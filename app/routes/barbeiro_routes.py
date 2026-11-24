@@ -3,7 +3,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from app.formatos import ler_data_hora, ler_inteiro, reais_para_centavos
 from app.routes.sessao import container, requer_papel, usuario_id
-from domain.erros import DadosInvalidos
+from domain.erros import AcessoNegado, DadosInvalidos, NaoEncontrado
 from use_cases.validar_foto_da_barbearia import LIMITE_DE_FOTO
 
 bp = Blueprint("barbeiro", __name__, url_prefix="/barbeiro")
@@ -94,6 +94,17 @@ def reservar_bloco():
         horario_ocioso_id=form.get("horario_ocioso_id", ""),
         inicio=ler_data_hora(form.get("inicio")),
         fim=ler_data_hora(form.get("fim")))
+    return redirect(url_for("barbeiro.painel"))
+
+
+@bp.post("/agendamentos/<agendamento_id>/cancelar")
+@requer_papel("barbeiro")
+def cancelar_agendamento(agendamento_id):
+    try:
+        container().cancelar_agendamento.executar(
+            barbeiro_id=usuario_id(), agendamento_id=agendamento_id)
+    except (AcessoNegado, DadosInvalidos, NaoEncontrado) as erro:
+        flash(str(erro), "erro")
     return redirect(url_for("barbeiro.painel"))
 
 

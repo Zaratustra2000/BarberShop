@@ -30,7 +30,7 @@
 
 <h2>Meus agendamentos</h2>
 <table>
-  <thead><tr><th>Quando</th><th>Serviço</th><th>Barbeiro</th><th>Onde</th><th>Valor</th></tr></thead>
+  <thead><tr><th>Quando</th><th>Serviço</th><th>Barbeiro</th><th>Onde</th><th>Valor</th><th>Estado</th></tr></thead>
   <tbody>
   {% for item in agendamentos %}
     <tr>
@@ -39,6 +39,7 @@
       <td>{{ item.barbeiro_nome }}</td>
       <td>{% if item.barbearia %}{{ item.barbearia.nome }}<br><small>{{ item.barbearia.endereco }}</small>{% endif %}</td>
       <td>{{ item.agendamento.preco_centavos|reais }}</td>
+      <td>{% if item.agendamento.cancelado %}<strong>Cancelado</strong>{% else %}Ativo{% endif %}</td>
     </tr>
   {% else %}
     <tr><td colspan="5">Você ainda não tem agendamentos.</td></tr>
