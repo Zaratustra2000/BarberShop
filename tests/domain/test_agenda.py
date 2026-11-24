@@ -80,3 +80,13 @@ def test_itens_juntam_bloco_barbearia_e_agendamentos():
     item, = agenda.itens
     assert item.barbearia.nome == "Barbearia Exemplo"
     assert [a.cliente_id for a in item.agendamentos] == ["cliente"]
+
+
+def test_agendamento_cancelado_nao_bloqueia_novo_agendamento_no_mesmo_bloco():
+    agenda = agenda_com_bloco()
+    cancelado = agenda.agendar("ana", CORTE, hora(14))
+    cancelado.cancelar()
+
+    novo = agenda.agendar("bia", CORTE, hora(14, 20))
+
+    assert novo.cliente_id == "bia"
