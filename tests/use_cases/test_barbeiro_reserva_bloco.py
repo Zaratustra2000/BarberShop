@@ -35,10 +35,42 @@ def buscar(ctx, bairro):
         bairro)
 
 
+def test_busca_sem_bairro_mostra_barbearias_ativas_e_indisponiveis(ctx):
+    dono_com_horario = ctx.cadastrar("dono", email="com@exemplo.com")
+    barbearia_com_horario = cadastrar_barbearia(
+        ctx, dono_com_horario, nome="Com horários")
+    publicar(ctx, dono_com_horario, barbearia_com_horario,
+             h(7, 13), h(7, 18))
+
+    dono_sem_horario = ctx.cadastrar("dono", email="sem@exemplo.com")
+    cadastrar_barbearia(ctx, dono_sem_horario, nome="Sem horários")
+
+    dono_desativado = ctx.cadastrar("dono", email="desativada@exemplo.com")
+    barbearia_desativada = cadastrar_barbearia(
+        ctx, dono_desativado, nome="Desativada")
+    barbearia_desativada.desativar()
+    ctx.barbearias.salvar(barbearia_desativada)
+
+    resultados = buscar(ctx, "")
+
+    assert [r.barbearia.nome for r in resultados] == [
+        "Com horários", "Sem horários"]
+    assert resultados[0].reservavel is True
+    assert resultados[1].reservavel is False
+
+
 def test_busca_por_bairro_ignora_acentos_e_maiusculas(ctx):
     barbearia_com_horario(ctx, h(7, 13), h(7, 18))
-    ofertas = buscar(ctx, "  BOTAFÓGO ")
-    assert [o.barbearia.nome for o in ofertas] == ["Barbearia Exemplo"]
+    resultados = buscar(ctx, "  BOTAFÓGO ")
+    assert [r.barbearia.nome for r in resultados] == ["Barbearia Exemplo"]
+
+
+def test_busca_por_bairro_aceita_trecho_flexivel(ctx):
+    barbearia_com_horario(ctx, h(7, 13), h(7, 18))
+
+    resultados = buscar(ctx, "tafo")
+
+    assert [r.barbearia.nome for r in resultados] == ["Barbearia Exemplo"]
 
 
 def test_busca_nao_mostra_outros_bairros(ctx):
@@ -51,7 +83,8 @@ def test_busca_mostra_so_o_que_esta_livre_e_no_futuro(ctx):
     barbearia, horario = barbearia_com_horario(ctx, h(7, 13), h(7, 18))
     rafa = ctx.cadastrar("barbeiro")
     reservar(ctx, rafa, barbearia, horario, h(7, 14), h(7, 16))
-    oferta, = buscar(ctx, "Botafogo")
+    resultado, = buscar(ctx, "Botafogo")
+    oferta, = resultado.ofertas
     assert oferta.periodos_livres == [Periodo(h(7, 13), h(7, 14)),
                                       Periodo(h(7, 16), h(7, 18))]
 
@@ -60,7 +93,8 @@ def test_horario_todo_reservado_some_da_busca(ctx):
     barbearia, horario = barbearia_com_horario(ctx, h(7, 13), h(7, 15))
     reservar(ctx, ctx.cadastrar("barbeiro"), barbearia, horario,
              h(7, 13), h(7, 15))
-    assert buscar(ctx, "Botafogo") == []
+    resultado, = buscar(ctx, "Botafogo")
+    assert resultado.reservavel is False
 
 
 def test_barbeiro_reserva_bloco_que_fica_salvo_com_o_valor(ctx):

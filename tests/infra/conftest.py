@@ -13,6 +13,7 @@ def repos(request, tmp_path):
             "barbearias": memoria.RepositorioDeBarbeariasEmMemoria(),
             "servicos": memoria.RepositorioDeServicosEmMemoria(),
             "agendamentos": memoria.RepositorioDeAgendamentosEmMemoria(),
+            "avaliacoes": memoria.RepositorioDeAvaliacoesEmMemoria(),
         }
     banco = BancoSQLite(str(tmp_path / "teste.sqlite3"))
     banco.criar_tabelas()
@@ -21,4 +22,5 @@ def repos(request, tmp_path):
         "barbearias": sqlite.RepositorioDeBarbeariasSQLite(banco),
         "servicos": sqlite.RepositorioDeServicosSQLite(banco),
         "agendamentos": sqlite.RepositorioDeAgendamentosSQLite(banco),
+        "avaliacoes": sqlite.RepositorioDeAvaliacoesSQLite(banco),
     }

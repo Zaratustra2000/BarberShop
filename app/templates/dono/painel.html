@@ -6,6 +6,7 @@
   <article>
     <header><strong><a href="{{ url_for('dono.barbearia', barbearia_id=b.id) }}">{{ b.nome }}</a></strong></header>
     {{ b.endereco }} · {{ b.bairro }} · {{ b.cadeiras|length }} cadeira(s) · {{ b.horarios_ociosos|length }} horário(s) ocioso(s)
+    {% if not b.ativa %}<br><strong>Desativada</strong>{% endif %}
   </article>
 {% else %}
   <p>Você ainda não cadastrou nenhuma barbearia.</p>

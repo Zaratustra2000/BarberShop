@@ -8,6 +8,7 @@ from copy import deepcopy
 from domain.usuario import Papel
 from use_cases.portas import (
     RepositorioDeAgendamentos,
+    RepositorioDeAvaliacoes,
     RepositorioDeBarbearias,
     RepositorioDeServicos,
     RepositorioDeUsuarios,
@@ -45,6 +46,9 @@ class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
     def salvar(self, barbearia):
         self._dados[barbearia.id] = deepcopy(barbearia)
 
+    def remover(self, barbearia_id):
+        self._dados.pop(barbearia_id, None)
+
     def por_id(self, barbearia_id):
         return deepcopy(self._dados.get(barbearia_id))
 
@@ -52,7 +56,11 @@ class RepositorioDeBarbeariasEmMemoria(RepositorioDeBarbearias):
         return self._filtrar(lambda b: b.dono_id == dono_id)
 
     def no_bairro(self, bairro_chave):
-        return self._filtrar(lambda b: b.bairro_chave == bairro_chave)
+        return self._filtrar(
+            lambda b: b.ativa and bairro_chave in b.bairro_chave)
+
+    def ativas(self):
+        return self._filtrar(lambda b: b.ativa)
 
     def com_blocos_do_barbeiro(self, barbeiro_id):
         return self._filtrar(lambda b: b.blocos_do_barbeiro(barbeiro_id))
@@ -86,6 +94,10 @@ class RepositorioDeAgendamentosEmMemoria(RepositorioDeAgendamentos):
     def salvar(self, agendamento):
         self._dados[agendamento.id] = deepcopy(agendamento)
 
+    def por_id(self, agendamento_id):
+        agendamento = self._dados.get(agendamento_id)
+        return deepcopy(agendamento) if agendamento else None
+
     def do_barbeiro(self, barbeiro_id):
         return self._filtrar(lambda a: a.barbeiro_id == barbeiro_id)
 
@@ -96,3 +108,23 @@ class RepositorioDeAgendamentosEmMemoria(RepositorioDeAgendamentos):
         achados = [a for a in self._dados.values() if criterio(a)]
         return [deepcopy(a) for a in
                 sorted(achados, key=lambda a: (a.periodo.inicio, a.id))]
+
+
+class RepositorioDeAvaliacoesEmMemoria(RepositorioDeAvaliacoes):
+    def __init__(self):
+        self._dados = {}
+
+    def salvar(self, avaliacao):
+        self._dados = {i: a for i, a in self._dados.items()
+                       if a.agendamento_id != avaliacao.agendamento_id}
+        self._dados[avaliacao.id] = deepcopy(avaliacao)
+
+    def do_agendamento(self, agendamento_id):
+        achadas = [a for a in self._dados.values()
+                   if a.agendamento_id == agendamento_id]
+        return deepcopy(achadas[0]) if achadas else None
+
+    def do_barbeiro(self, barbeiro_id):
+        achadas = [deepcopy(a) for a in self._dados.values()
+                   if a.barbeiro_id == barbeiro_id]
+        return sorted(achadas, key=lambda a: (a.agendamento_id, a.id))

@@ -1,24 +1,38 @@
 {% extends "base.html" %}
+{% from "_avaliacoes.html" import resumo %}
 {% block titulo %}Meus agendamentos{% endblock %}
 {% block conteudo %}
 <h2>Encontre seu barbeiro de confiança</h2>
 <form method="get" role="search">
-  <input name="nome" value="{{ nome }}" placeholder="Nome do barbeiro" required>
+  <input name="nome" value="{{ nome }}" placeholder="Nome do barbeiro">
   <button type="submit">Buscar</button>
 </form>
-{% if nome %}
-  <ul>
-  {% for b in barbeiros %}
-    <li><a href="/cliente/barbeiros/{{ b.id }}">{{ b.nome }}</a></li>
+<ul>
+{% for resultado in barbeiros %}
+  {% set b = resultado.barbeiro %}
+  <li>
+    <a href="/cliente/barbeiros/{{ b.id }}">{{ b.nome }}</a>
+    <br><small>{{ resumo(resultado.avaliacoes) }}</small>
+    {% if not resultado.tem_servico %}
+      <br><small>Este barbeiro ainda não tem Serviços cadastrados.</small>
+    {% elif not resultado.tem_horario %}
+      <br><small>Este barbeiro ainda não tem horário para receber Agendamentos.</small>
+    {% else %}
+      <br><small>Pode receber Agendamentos.</small>
+    {% endif %}
+  </li>
   {% else %}
+  {% if nome %}
     <li>Nenhum barbeiro com “{{ nome }}” no nome.</li>
-  {% endfor %}
-  </ul>
-{% endif %}
+  {% else %}
+    <li>Nenhum barbeiro cadastrado.</li>
+  {% endif %}
+{% endfor %}
+</ul>
 
 <h2>Meus agendamentos</h2>
 <table>
-  <thead><tr><th>Quando</th><th>Serviço</th><th>Barbeiro</th><th>Onde</th><th>Valor</th></tr></thead>
+  <thead><tr><th>Quando</th><th>Serviço</th><th>Barbeiro</th><th>Onde</th><th>Valor</th><th>Estado</th><th>Avaliação</th></tr></thead>
   <tbody>
   {% for item in agendamentos %}
     <tr>
@@ -27,9 +41,21 @@
       <td>{{ item.barbeiro_nome }}</td>
       <td>{% if item.barbearia %}{{ item.barbearia.nome }}<br><small>{{ item.barbearia.endereco }}</small>{% endif %}</td>
       <td>{{ item.agendamento.preco_centavos|reais }}</td>
+      <td>{% if item.agendamento.cancelado %}<strong>Cancelado</strong>{% else %}Ativo{% endif %}</td>
+      <td>
+        {% if item.avaliacao %}Sua nota: {{ item.avaliacao.nota }}{% endif %}
+        {% if item.pode_avaliar %}
+        <form method="post" action="/cliente/agendamentos/{{ item.agendamento.id }}/avaliacao" class="inline">
+          <select name="nota" aria-label="Nota de 1 a 5">
+            {% for n in range(1, 6) %}<option value="{{ n }}" {% if item.avaliacao and item.avaliacao.nota == n %}selected{% endif %}>{{ n }}</option>{% endfor %}
+          </select>
+          <button type="submit" class="outline">{% if item.avaliacao %}Alterar nota{% else %}Avaliar{% endif %}</button>
+        </form>
+        {% endif %}
+      </td>
     </tr>
   {% else %}
-    <tr><td colspan="5">Você ainda não tem agendamentos.</td></tr>
+    <tr><td colspan="7">Você ainda não tem agendamentos.</td></tr>
   {% endfor %}
   </tbody>
 </table>

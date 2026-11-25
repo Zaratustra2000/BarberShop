@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     senha_hash TEXT NOT NULL,
-    papel TEXT NOT NULL
+    papel TEXT NOT NULL,
+    apresentacao TEXT NOT NULL DEFAULT '',
+    foto_perfil TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS barbearias (
     id TEXT PRIMARY KEY,
@@ -18,7 +20,9 @@ CREATE TABLE IF NOT EXISTS barbearias (
     bairro_chave TEXT NOT NULL,
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
-    regras TEXT NOT NULL DEFAULT ''
+    regras TEXT NOT NULL DEFAULT '',
+    foto_principal TEXT NOT NULL DEFAULT '',
+    ativa INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS ix_barbearias_bairro ON barbearias(bairro_chave);
 CREATE TABLE IF NOT EXISTS cadeiras (
@@ -63,12 +67,22 @@ CREATE TABLE IF NOT EXISTS agendamentos (
     bloco_id TEXT NOT NULL,
     inicio TEXT NOT NULL,
     fim TEXT NOT NULL,
-    preco_centavos INTEGER NOT NULL
+    preco_centavos INTEGER NOT NULL,
+    cancelado INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS ix_agendamentos_barbeiro
     ON agendamentos(barbeiro_id);
 CREATE INDEX IF NOT EXISTS ix_agendamentos_cliente
     ON agendamentos(cliente_id);
+CREATE TABLE IF NOT EXISTS avaliacoes (
+    id TEXT PRIMARY KEY,
+    agendamento_id TEXT NOT NULL UNIQUE,
+    cliente_id TEXT NOT NULL,
+    barbeiro_id TEXT NOT NULL,
+    nota INTEGER NOT NULL CHECK (nota BETWEEN 1 AND 5)
+);
+CREATE INDEX IF NOT EXISTS ix_avaliacoes_barbeiro
+    ON avaliacoes(barbeiro_id);
 """
 
 
@@ -95,3 +109,39 @@ class BancoSQLite:
     def criar_tabelas(self) -> None:
         with self.conexao() as con:
             con.executescript(ESQUEMA)
+            colunas = {
+                coluna["name"]
+                for coluna in con.execute("PRAGMA table_info(barbearias)")
+            }
+            if "foto_principal" not in colunas:
+                con.execute(
+                    "ALTER TABLE barbearias "
+                    "ADD COLUMN foto_principal TEXT NOT NULL DEFAULT ''")
+            colunas = {
+                coluna["name"]
+                for coluna in con.execute("PRAGMA table_info(barbearias)")
+            }
+            if "ativa" not in colunas:
+                con.execute(
+                    "ALTER TABLE barbearias "
+                    "ADD COLUMN ativa INTEGER NOT NULL DEFAULT 1")
+            colunas = {
+                coluna["name"]
+                for coluna in con.execute("PRAGMA table_info(usuarios)")
+            }
+            if "apresentacao" not in colunas:
+                con.execute(
+                    "ALTER TABLE usuarios "
+                    "ADD COLUMN apresentacao TEXT NOT NULL DEFAULT ''")
+            if "foto_perfil" not in colunas:
+                con.execute(
+                    "ALTER TABLE usuarios "
+                    "ADD COLUMN foto_perfil TEXT NOT NULL DEFAULT ''")
+            colunas = {
+                coluna["name"]
+                for coluna in con.execute("PRAGMA table_info(agendamentos)")
+            }
+            if "cancelado" not in colunas:
+                con.execute(
+                    "ALTER TABLE agendamentos "
+                    "ADD COLUMN cancelado INTEGER NOT NULL DEFAULT 0")

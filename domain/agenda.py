@@ -59,7 +59,8 @@ class AgendaDoBarbeiro:
         duracao = timedelta(minutes=servico.duracao_minutos)
         horarios = []
         for barbearia, bloco in self._blocos:
-            ocupados = [a.periodo for a in self._no_bloco(bloco)]
+            ocupados = [a.periodo for a in self._no_bloco(bloco)
+                        if not a.cancelado]
             for livre in bloco.periodo.subtrair(ocupados):
                 for inicio in _inicios(livre, duracao):
                     if inicio >= a_partir_de:
@@ -73,7 +74,8 @@ class AgendaDoBarbeiro:
         periodo = Periodo(inicio,
                           inicio + timedelta(minutes=servico.duracao_minutos))
         barbearia, bloco = self._bloco_que_contem(periodo)
-        if any(a.periodo.sobrepoe(periodo) for a in self._agendamentos):
+        if any(not a.cancelado and a.periodo.sobrepoe(periodo)
+               for a in self._agendamentos):
             raise ConflitoDeHorario("O barbeiro já tem um agendamento "
                                     "nesse horário.")
         agendamento = Agendamento(

@@ -1,0 +1,21 @@
+{
+  "municipio": "Rio de Janeiro",
+  "fonte": "OpenStreetMap",
+  "extrato": "Sudeste do Brasil (Geofabrik)",
+  "extrato_url": "https://download.geofabrik.de/south-america/brazil/sudeste/sudeste-latest.osm.pbf",
+  "data_extrato": "2026-11-23",
+  "licenca": "ODbL",
+  "licenca_url": "https://opendatacommons.org/licenses/odbl/",
+  "fonte_url": "https://www.openstreetmap.org/copyright",
+  "data_preparacao": "2026-11-24",
+  "renderizador": "overv/openstreetmap-tile-server:2.3.0",
+  "zoom_minimo": 10,
+  "zoom_maximo": 16,
+  "limites": {
+    "oeste": -43.795,
+    "sul": -23.082,
+    "leste": -43.099,
+    "norte": -22.746
+  },
+  "url": "/static/basemap/rio-de-janeiro/{z}/{x}/{y}.png"
+}

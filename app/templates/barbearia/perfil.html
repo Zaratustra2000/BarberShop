@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}{{ barbearia.nome }}{% endblock %}
+{% block head %}{% include "_leaflet.html" %}{% endblock %}
+{% block conteudo %}
+<h2>{{ barbearia.nome }}</h2>
+{% if barbearia.foto_principal %}
+<img src="{{ url_for('foto_da_barbearia', nome_do_arquivo=barbearia.foto_principal) }}" alt="Foto da {{ barbearia.nome }}">
+{% endif %}
+<p>{{ barbearia.endereco }} · {{ barbearia.bairro }}</p>
+{% if barbearia.regras %}<p><strong>Regras da casa:</strong> {{ barbearia.regras }}</p>{% endif %}
+<p><strong>Cadeiras:</strong> {{ barbearia.cadeiras|length }}</p>
+<div class="mapa" data-mapa-marcadores='{{ [{"lat": barbearia.latitude, "lng": barbearia.longitude, "titulo": barbearia.nome, "detalhe": barbearia.endereco}]|tojson }}'></div>
+{% endblock %}

@@ -22,6 +22,9 @@ python3 -m venv .venv
 # (opcional) dados sintéticos de demonstração; a senha das contas é demo123
 .venv/bin/python -m scripts.popular_demo
 
+O seed cria também fotos PNG sintéticas para as duas Barbearias, sem
+dependência de imagens externas.
+
 export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
 .venv/bin/flask --app app.main:create_app run
 # abra http://127.0.0.1:5000
@@ -29,6 +32,13 @@ export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
 
 Contas de demonstração: `carlos@exemplo.com` (dono), `rafa@exemplo.com`
 (barbeiro) e `lucas@exemplo.com` (cliente).
+
+## Mapa municipal offline
+
+A aplicação entrega os tiles locais do Rio de Janeiro nos zooms 10–16. Não usa
+tile server externo para o basemap. A manutenção manual, os metadados
+obrigatórios e a verificação de navegador estão documentados em
+[docs/mapa-municipal-offline.md](docs/mapa-municipal-offline.md).
 
 ## Testes e estilo
 

@@ -1,7 +1,7 @@
 """Controllers do cliente (US5)."""
 from flask import Blueprint, redirect, render_template, request, url_for
 
-from app.formatos import ler_data_hora
+from app.formatos import ler_data_hora, ler_inteiro
 from app.routes.sessao import container, requer_papel, usuario_id
 
 bp = Blueprint("cliente", __name__, url_prefix="/cliente")
@@ -12,9 +12,26 @@ bp = Blueprint("cliente", __name__, url_prefix="/cliente")
 def painel():
     c = container()
     nome = request.args.get("nome", "").strip()
+    barbeiros = c.buscar_barbeiros.executar(nome)
+    resultados = []
+    for barbeiro in barbeiros:
+        perfil = c.consultar_perfil_do_barbeiro.executar(barbeiro.id)
+        tem_horario = False
+        for servico in perfil.servicos:
+            perfil_com_servico = c.consultar_perfil_do_barbeiro.executar(
+                barbeiro.id, servico.id)
+            if perfil_com_servico.horarios:
+                tem_horario = True
+                break
+        resultados.append({
+            "barbeiro": barbeiro,
+            "tem_servico": bool(perfil.servicos),
+            "tem_horario": tem_horario,
+            "avaliacoes": perfil.avaliacoes,
+        })
     return render_template(
         "cliente/painel.html", nome=nome,
-        barbeiros=c.buscar_barbeiros.executar(nome) if nome else [],
+        barbeiros=resultados,
         agendamentos=c.consultar_agendamentos_do_cliente.executar(
             usuario_id()))
 
@@ -41,3 +58,20 @@ def agendar():
         servico_id=request.form.get("servico_id", ""),
         inicio=ler_data_hora(request.form.get("inicio")))
     return redirect(url_for("cliente.painel"))
+
+
+@bp.post("/agendamentos/<agendamento_id>/avaliacao")
+@requer_papel("cliente")
+def avaliar(agendamento_id):
+    container().avaliar_agendamento.executar(
+        cliente_id=usuario_id(), agendamento_id=agendamento_id,
+        nota=ler_inteiro(request.form.get("nota"), "nota"))
+    return redirect(url_for("cliente.painel"))
+
+
+@bp.get("/barbearias/<barbearia_id>")
+@requer_papel("cliente")
+def perfil_da_barbearia(barbearia_id):
+    barbearia = container().consultar_perfil_da_barbearia.executar(
+        barbearia_id)
+    return render_template("barbearia/perfil.html", barbearia=barbearia)

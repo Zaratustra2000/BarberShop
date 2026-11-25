@@ -35,6 +35,10 @@ def formatar_reais(centavos: int) -> str:
     return "R$ {},{:02d}".format(milhar, resto)
 
 
+def formatar_media(media: float) -> str:
+    return "{:.1f}".format(media).replace(".", ",")
+
+
 def ler_data_hora(texto: str) -> datetime:
     """Lê o valor de um <input type="datetime-local">."""
     try:
@@ -51,7 +55,13 @@ def formatar_hora(valor: datetime) -> str:
     return valor.strftime("%H:%M")
 
 
+def formatar_data_hora_local(valor: datetime) -> str:
+    return valor.strftime("%Y-%m-%dT%H:%M")
+
+
 def registrar_filtros(app):
     app.jinja_env.filters["reais"] = formatar_reais
+    app.jinja_env.filters["media"] = formatar_media
     app.jinja_env.filters["data_hora"] = formatar_data_hora
     app.jinja_env.filters["hora"] = formatar_hora
+    app.jinja_env.filters["data_hora_local"] = formatar_data_hora_local

@@ -35,6 +35,46 @@ def test_cadeiras_sao_numeradas_na_ordem():
     assert [c.nome for c in b.cadeiras] == ["Cadeira 1", "Cadeira 2"]
 
 
+def test_perfil_da_barbearia_pode_ser_editado():
+    b = barbearia()
+    b.editar(nome="Nova Barbershop", endereco="Rua Nova, 20",
+             bairro="Copacabana", latitude=-22.967, longitude=-43.178,
+             regras="Sem atrasos.")
+    assert (b.nome, b.endereco, b.bairro, b.latitude, b.longitude,
+            b.regras) == ("Nova Barbershop", "Rua Nova, 20", "Copacabana",
+                          -22.967, -43.178, "Sem atrasos.")
+
+
+def test_barbearia_pode_receber_foto_principal():
+    b = barbearia()
+    b.definir_foto_principal("barbearia-exemplo.webp")
+    assert b.foto_principal == "barbearia-exemplo.webp"
+
+
+def test_cadeira_sem_referencias_pode_ser_removida():
+    b = barbearia()
+    cadeira = b.adicionar_cadeira()
+    b.remover_cadeira(cadeira.id)
+    assert b.cadeiras == []
+
+
+def test_cadeira_com_horario_ocioso_nao_pode_ser_removida():
+    b = barbearia()
+    cadeira = b.adicionar_cadeira()
+    b.publicar_horario_ocioso(
+        cadeira.id, Periodo(hora(13), hora(18)), 3000)
+    with pytest.raises(ConflitoDeHorario):
+        b.remover_cadeira(cadeira.id)
+
+
+def test_cadeira_com_bloco_nao_pode_ser_removida():
+    b, horario = com_horario_ocioso()
+    b.reservar_bloco(horario.id, "rafa",
+                     Periodo(hora(14), hora(15)))
+    with pytest.raises(ConflitoDeHorario):
+        b.remover_cadeira(horario.cadeira_id)
+
+
 def test_publicar_horario_ocioso_em_cadeira_da_barbearia():
     b = barbearia()
     cadeira = b.adicionar_cadeira()
@@ -113,3 +153,70 @@ def test_periodos_livres_descontam_os_blocos():
 def test_horario_ocioso_inexistente_nao_e_encontrado():
     with pytest.raises(NaoEncontrado):
         barbearia().reservar_bloco("x", "rafa", Periodo(hora(13), hora(14)))
+
+
+def test_horario_ocioso_sem_blocos_pode_ser_editado():
+    b, horario = com_horario_ocioso()
+    segunda_cadeira = b.adicionar_cadeira()
+
+    b.editar_horario_ocioso(
+        horario.id, segunda_cadeira.id,
+        Periodo(hora(14), hora(17)), 4500)
+
+    assert horario.cadeira_id == segunda_cadeira.id
+    assert horario.periodo == Periodo(hora(14), hora(17))
+    assert horario.preco_por_hora_centavos == 4500
+
+
+def test_edicao_de_horario_ocioso_nao_cria_sobreposicao():
+    b = barbearia()
+    cadeira = b.adicionar_cadeira()
+    horario = b.publicar_horario_ocioso(
+        cadeira.id, Periodo(hora(13), hora(15)), 3000)
+    b.publicar_horario_ocioso(
+        cadeira.id, Periodo(hora(16), hora(18)), 3000)
+
+    with pytest.raises(ConflitoDeHorario):
+        b.editar_horario_ocioso(
+            horario.id, cadeira.id, Periodo(hora(17), hora(19)), 3500)
+
+
+def test_edicao_com_bloco_mantem_bloco_e_valor():
+    b, horario = com_horario_ocioso()
+    bloco = b.reservar_bloco(
+        horario.id, "rafa", Periodo(hora(14), hora(15)))
+    segunda_cadeira = b.adicionar_cadeira()
+
+    b.editar_horario_ocioso(
+        horario.id, segunda_cadeira.id,
+        Periodo(hora(13, 30), hora(16)), 4500)
+
+    assert bloco.cadeira_id == segunda_cadeira.id
+    assert bloco.horario_ocioso_id == horario.id
+    assert bloco.valor_centavos == 3000
+
+
+def test_edicao_recusa_periodo_que_nao_contem_bloco():
+    b, horario = com_horario_ocioso()
+    b.reservar_bloco(horario.id, "rafa", Periodo(hora(14), hora(15)))
+
+    with pytest.raises(DadosInvalidos):
+        b.editar_horario_ocioso(
+            horario.id, horario.cadeira_id,
+            Periodo(hora(15), hora(18)), 3500)
+
+
+def test_horario_ocioso_sem_blocos_pode_ser_excluido():
+    b, horario = com_horario_ocioso()
+
+    b.excluir_horario_ocioso(horario.id)
+
+    assert b.horarios_ociosos == []
+
+
+def test_horario_ocioso_com_bloco_nao_pode_ser_excluido():
+    b, horario = com_horario_ocioso()
+    b.reservar_bloco(horario.id, "rafa", Periodo(hora(14), hora(15)))
+
+    with pytest.raises(ConflitoDeHorario):
+        b.excluir_horario_ocioso(horario.id)

@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from domain.agendamento import Agendamento
+from domain.avaliacao import Avaliacao
 from domain.barbearia import Barbearia
 from domain.servico import Servico
 from domain.usuario import Usuario
@@ -40,6 +41,10 @@ class RepositorioDeBarbearias(ABC):
         ...
 
     @abstractmethod
+    def remover(self, barbearia_id: str) -> None:
+        ...
+
+    @abstractmethod
     def por_id(self, barbearia_id: str) -> Optional[Barbearia]:
         ...
 
@@ -49,7 +54,13 @@ class RepositorioDeBarbearias(ABC):
 
     @abstractmethod
     def no_bairro(self, bairro_chave: str) -> List[Barbearia]:
-        """Barbearias cuja chave de bairro (normalizada) é igual."""
+        """Barbearias ativas cuja chave de bairro contém o trecho
+        normalizado.
+        """
+
+    @abstractmethod
+    def ativas(self) -> List[Barbearia]:
+        """Todas as barbearias ativas."""
 
     @abstractmethod
     def com_blocos_do_barbeiro(self, barbeiro_id: str) -> List[Barbearia]:
@@ -76,12 +87,46 @@ class RepositorioDeAgendamentos(ABC):
         ...
 
     @abstractmethod
+    def por_id(self, agendamento_id: str) -> Optional[Agendamento]:
+        ...
+
+    @abstractmethod
     def do_barbeiro(self, barbeiro_id: str) -> List[Agendamento]:
         """Agendamentos do barbeiro em ordem cronológica."""
 
     @abstractmethod
     def do_cliente(self, cliente_id: str) -> List[Agendamento]:
         """Agendamentos do cliente em ordem cronológica."""
+
+
+class RepositorioDeAvaliacoes(ABC):
+    @abstractmethod
+    def salvar(self, avaliacao: Avaliacao) -> None:
+        ...
+
+    @abstractmethod
+    def do_agendamento(self, agendamento_id: str) -> Optional[Avaliacao]:
+        ...
+
+    @abstractmethod
+    def do_barbeiro(self, barbeiro_id: str) -> List[Avaliacao]:
+        ...
+
+
+class ArmazenamentoDeFotos(ABC):
+    @abstractmethod
+    def salvar(self, conteudo: bytes, extensao: str) -> str:
+        ...
+
+    @abstractmethod
+    def remover(self, nome_do_arquivo: str) -> None:
+        ...
+
+
+class ValidadorDeFotos(ABC):
+    @abstractmethod
+    def validar(self, conteudo: bytes) -> str:
+        ...
 
 
 class GeradorDeHashDeSenha(ABC):

@@ -54,6 +54,8 @@ class Barbearia:
     latitude: float
     longitude: float
     regras: str = ""
+    foto_principal: str = ""
+    ativa: bool = True
     cadeiras: List[Cadeira] = field(default_factory=list)
     horarios_ociosos: List[HorarioOcioso] = field(default_factory=list)
     blocos: List[BlocoDeHorario] = field(default_factory=list)
@@ -77,10 +79,38 @@ class Barbearia:
     def pertence_a(self, dono_id: str) -> bool:
         return self.dono_id == dono_id
 
+    def desativar(self) -> None:
+        self.ativa = False
+
+    def editar(self, nome: str, endereco: str, bairro: str, latitude: float,
+               longitude: float, regras: str) -> None:
+        self.nome = nome
+        self.endereco = endereco
+        self.bairro = bairro
+        self.latitude = latitude
+        self.longitude = longitude
+        self.regras = regras
+        self.__post_init__()
+
+    def definir_foto_principal(self, nome_do_arquivo: str) -> None:
+        self.foto_principal = nome_do_arquivo
+
     def adicionar_cadeira(self) -> Cadeira:
         cadeira = Cadeira(nome="Cadeira {}".format(len(self.cadeiras) + 1))
         self.cadeiras.append(cadeira)
         return cadeira
+
+    def remover_cadeira(self, cadeira_id: str) -> None:
+        cadeira = self.cadeira(cadeira_id)
+        if any(h.cadeira_id == cadeira.id for h in self.horarios_ociosos):
+            raise ConflitoDeHorario(
+                "Não é possível remover uma cadeira com horários ociosos.")
+        if any(b.cadeira_id == cadeira.id for b in self.blocos):
+            raise ConflitoDeHorario(
+                "Não é possível remover uma cadeira com blocos de horário.")
+        self.cadeiras.remove(cadeira)
+        for posicao, existente in enumerate(self.cadeiras, start=1):
+            existente.nome = "Cadeira {}".format(posicao)
 
     def cadeira(self, cadeira_id: str) -> Cadeira:
         for cadeira in self.cadeiras:
@@ -91,6 +121,10 @@ class Barbearia:
     def publicar_horario_ocioso(self, cadeira_id: str, periodo: Periodo,
                                 preco_por_hora_centavos: int
                                 ) -> HorarioOcioso:
+        if not self.ativa:
+            raise DadosInvalidos(
+                "Não é possível publicar horários em uma barbearia "
+                "desativada.")
         self.cadeira(cadeira_id)
         if preco_por_hora_centavos <= 0:
             raise DadosInvalidos("O preço por hora precisa ser positivo.")
@@ -109,6 +143,47 @@ class Barbearia:
                 return horario
         raise NaoEncontrado("Horário ocioso não encontrado.")
 
+    def editar_horario_ocioso(
+            self, horario_ocioso_id: str, cadeira_id: str, periodo: Periodo,
+            preco_por_hora_centavos: int) -> HorarioOcioso:
+        horario = self.horario_ocioso(horario_ocioso_id)
+        self.cadeira(cadeira_id)
+        if preco_por_hora_centavos <= 0:
+            raise DadosInvalidos("O preço por hora precisa ser positivo.")
+        blocos = [bloco for bloco in self.blocos
+                  if bloco.horario_ocioso_id == horario.id]
+        for bloco in blocos:
+            if not periodo.contem(bloco.periodo):
+                raise DadosInvalidos(
+                    "Os blocos precisam continuar dentro do horário ocioso.")
+        for existente in self.horarios_ociosos:
+            if (existente.id != horario.id
+                    and existente.cadeira_id == cadeira_id
+                    and existente.periodo.sobrepoe(periodo)):
+                raise ConflitoDeHorario(
+                    "Esta cadeira já tem um horário ocioso nesse período.")
+        for bloco in blocos:
+            for outro in self.blocos:
+                if (outro.horario_ocioso_id != horario.id
+                        and outro.cadeira_id == cadeira_id
+                        and outro.periodo.sobrepoe(bloco.periodo)):
+                    raise ConflitoDeHorario(
+                        "Esta cadeira já tem um bloco reservado "
+                        "nesse período.")
+        horario.cadeira_id = cadeira_id
+        horario.periodo = periodo
+        horario.preco_por_hora_centavos = preco_por_hora_centavos
+        for bloco in blocos:
+            bloco.cadeira_id = cadeira_id
+        return horario
+
+    def excluir_horario_ocioso(self, horario_ocioso_id: str) -> None:
+        horario = self.horario_ocioso(horario_ocioso_id)
+        if any(bloco.horario_ocioso_id == horario.id for bloco in self.blocos):
+            raise ConflitoDeHorario(
+                "Não é possível excluir um horário ocioso com blocos.")
+        self.horarios_ociosos.remove(horario)
+
     def periodos_livres(self, horario_ocioso_id: str) -> List[Periodo]:
         horario = self.horario_ocioso(horario_ocioso_id)
         return horario.periodo.subtrair(
@@ -117,6 +192,9 @@ class Barbearia:
 
     def reservar_bloco(self, horario_ocioso_id: str, barbeiro_id: str,
                        periodo: Periodo) -> BlocoDeHorario:
+        if not self.ativa:
+            raise DadosInvalidos(
+                "Não é possível reservar blocos em uma barbearia desativada.")
         horario = self.horario_ocioso(horario_ocioso_id)
         if not horario.periodo.contem(periodo):
             raise DadosInvalidos(

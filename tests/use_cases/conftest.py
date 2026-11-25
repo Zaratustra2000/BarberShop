@@ -2,6 +2,7 @@ import pytest
 
 from infra.repositories.memoria import (
     RepositorioDeAgendamentosEmMemoria,
+    RepositorioDeAvaliacoesEmMemoria,
     RepositorioDeBarbeariasEmMemoria,
     RepositorioDeServicosEmMemoria,
     RepositorioDeUsuariosEmMemoria,
@@ -18,6 +19,7 @@ class Contexto:
         self.barbearias = RepositorioDeBarbeariasEmMemoria()
         self.servicos = RepositorioDeServicosEmMemoria()
         self.agendamentos = RepositorioDeAgendamentosEmMemoria()
+        self.avaliacoes = RepositorioDeAvaliacoesEmMemoria()
         self.hash = HashFalso()
         self.relogio = RelogioFixo()
 

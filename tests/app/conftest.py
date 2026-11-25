@@ -7,7 +7,8 @@ from tests.dubles import RelogioFixo
 
 
 @pytest.fixture
-def client(tmp_path):
+def client(tmp_path, monkeypatch):
+    monkeypatch.setenv("BARBERSHOP_FOTOS_DIR", str(tmp_path / "fotos"))
     app = create_app(caminho_do_banco=str(tmp_path / "app.sqlite3"),
                      relogio=RelogioFixo(), secret_key="chave-de-teste")
     app.config["TESTING"] = True

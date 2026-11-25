@@ -1,15 +1,23 @@
 {% extends "base.html" %}
+{% from "_avaliacoes.html" import resumo %}
 {% block titulo %}{{ perfil.barbeiro.nome }}{% endblock %}
 {% block head %}{% include "_leaflet.html" %}{% endblock %}
 {% block conteudo %}
 <h2>✂️ {{ perfil.barbeiro.nome }}</h2>
+<p>{{ resumo(perfil.avaliacoes) }}</p>
+{% if perfil.barbeiro.foto_perfil %}
+<img src="{{ url_for('foto_da_barbearia', nome_do_arquivo=perfil.barbeiro.foto_perfil) }}" alt="Foto de {{ perfil.barbeiro.nome }}">
+{% endif %}
+{% if perfil.barbeiro.apresentacao %}
+<p>{{ perfil.barbeiro.apresentacao }}</p>
+{% endif %}
 
 <h3>Onde vai atender</h3>
 {% if perfil.proximos_locais %}
   <div class="mapa" data-mapa-marcadores='{{ marcadores|tojson }}'></div>
   <ul>
   {% for item in perfil.proximos_locais %}
-    <li><strong>{{ item.barbearia.nome }}</strong> ({{ item.barbearia.endereco }}): {{ item.bloco.periodo.inicio|data_hora }} às {{ item.bloco.periodo.fim|hora }}</li>
+    <li><strong><a href="{{ url_for('cliente.perfil_da_barbearia', barbearia_id=item.barbearia.id) }}">{{ item.barbearia.nome }}</a></strong> ({{ item.barbearia.endereco }}): {{ item.bloco.periodo.inicio|data_hora }} às {{ item.bloco.periodo.fim|hora }}</li>
   {% endfor %}
   </ul>
 {% else %}

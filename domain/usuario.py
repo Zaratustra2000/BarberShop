@@ -27,14 +27,36 @@ class Usuario:
     senha_hash: str
     papel: Papel
     id: str = field(default_factory=novo_id)
+    apresentacao: str = ""
+    foto_perfil: str = ""
 
     def __post_init__(self):
         self.nome = (self.nome or "").strip()
         self.email = (self.email or "").strip().lower()
+        self.apresentacao = (self.apresentacao or "").strip()
         if not self.nome:
             raise DadosInvalidos("Informe o nome.")
         if "@" not in self.email or self.email.startswith("@"):
             raise DadosInvalidos("Informe um e-mail válido.")
+        if len(self.apresentacao) > 500:
+            raise DadosInvalidos(
+                "A apresentação deve ter no máximo 500 caracteres.")
+        self.foto_perfil = self.foto_perfil or ""
+
+    def editar_perfil_do_barbeiro(self, nome: str,
+                                  apresentacao: str) -> None:
+        nome = (nome or "").strip()
+        apresentacao = (apresentacao or "").strip()
+        if not nome:
+            raise DadosInvalidos("Informe o nome.")
+        if len(apresentacao) > 500:
+            raise DadosInvalidos(
+                "A apresentação deve ter no máximo 500 caracteres.")
+        self.nome = nome
+        self.apresentacao = apresentacao
+
+    def definir_foto_perfil(self, nome_do_arquivo: str) -> None:
+        self.foto_perfil = nome_do_arquivo or ""
 
     def exigir_papel(self, papel: Papel) -> None:
         if self.papel != papel:

@@ -4,20 +4,22 @@
 {% block conteudo %}
 <h2>Buscar cadeiras ociosas</h2>
 <form method="get" role="search">
-  <input name="bairro" value="{{ bairro }}" placeholder="Bairro (ex.: Botafogo)" required>
+  <input name="bairro" value="{{ bairro }}" placeholder="Bairro (ex.: Botafogo)">
   <button type="submit">Buscar</button>
 </form>
-{% if bairro %}
-  {% if ofertas %}
-    <div class="mapa" data-mapa-marcadores='{{ marcadores|tojson }}'></div>
-  {% endif %}
-  {% for o in ofertas %}
-    <article>
-      <header>
-        <strong>{{ o.barbearia.nome }}</strong> · {{ o.cadeira.nome }} · {{ o.horario.preco_por_hora_centavos|reais }}/hora
-        <br><small>{{ o.barbearia.endereco }} · {{ o.barbearia.bairro }}</small>
-      </header>
-      {% if o.barbearia.regras %}<p><small><strong>Regras da casa:</strong> {{ o.barbearia.regras }}</small></p>{% endif %}
+{% if marcadores %}
+  <div class="mapa" data-mapa-marcadores='{{ marcadores|tojson }}'></div>
+{% endif %}
+{% for resultado in resultados %}
+  <article>
+    <header>
+      <strong><a href="{{ url_for('barbeiro.perfil_da_barbearia', barbearia_id=resultado.barbearia.id) }}">{{ resultado.barbearia.nome }}</a></strong>
+      <br><small>{{ resultado.barbearia.endereco }} · {{ resultado.barbearia.bairro }}</small>
+    </header>
+    {% if resultado.barbearia.regras %}<p><small><strong>Regras da casa:</strong> {{ resultado.barbearia.regras }}</small></p>{% endif %}
+    {% if resultado.reservavel %}
+      {% for o in resultado.ofertas %}
+      <p><strong>{{ o.cadeira.nome }}</strong> · {{ o.horario.preco_por_hora_centavos|reais }}/hora</p>
       <p>Livre:
         {% for p in o.periodos_livres %}
           <span class="livre">{{ p.inicio.strftime('%d/%m') }} {{ p.inicio|hora }} às {{ p.fim|hora }}</span>{% if not loop.last %}, {% endif %}
@@ -32,9 +34,12 @@
           <label>&nbsp;<button type="submit">Reservar bloco</button></label>
         </div>
       </form>
-    </article>
-  {% else %}
-    <p>Nenhuma cadeira ociosa em “{{ bairro }}” por enquanto.</p>
-  {% endfor %}
-{% endif %}
+      {% endfor %}
+    {% else %}
+      <p><strong>Indisponível para nova reserva</strong>: não há horários ociosos futuros com períodos livres.</p>
+    {% endif %}
+  </article>
+{% else %}
+  <p>Nenhuma barbearia ativa{% if bairro %} em “{{ bairro }}”{% endif %} por enquanto.</p>
+{% endfor %}
 {% endblock %}
